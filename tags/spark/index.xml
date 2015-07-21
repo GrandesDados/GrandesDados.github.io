@@ -84,7 +84,7 @@ computá-lo a partir de um conjunto de dados.&lt;/li&gt;
 &lt;strong&gt;intersection&lt;/strong&gt;: retorna os elementos que pertencem a interseção entre 2 RDDs.&lt;br/&gt;
 &lt;strong&gt;distinct&lt;/strong&gt;: elimina elementos duplicados do conjunto.&lt;br/&gt;
 &lt;strong&gt;reduceByKey&lt;/strong&gt;: executa uma operação de reduce para cada valor que compartilha a mesma chave.&lt;br/&gt;
-&lt;strong&gt;cartesian&lt;/strong&gt;: retorna o produto cartesiano entre 2 datasets.&lt;br/&gt;&lt;/p&gt;
+&lt;strong&gt;cartesian&lt;/strong&gt;: retorna o produto cartesiano entre 2 datasets.&lt;/p&gt;
 
 &lt;p&gt;Algumas operações de ação:&lt;br/&gt;
 &lt;strong&gt;reduce&lt;/strong&gt;: agrega os elementos do dataset usando uma função parâmetro que retornar um valor único.&lt;br/&gt;
@@ -92,7 +92,7 @@ computá-lo a partir de um conjunto de dados.&lt;/li&gt;
 &lt;strong&gt;count&lt;/strong&gt;: retorna o números de elementos do dataset.&lt;br/&gt;
 &lt;strong&gt;take&lt;/strong&gt;: retorna os n primeiro elementos do conjunto como um array.&lt;br/&gt;
 &lt;strong&gt;saveAsTextFile&lt;/strong&gt;: salva o dataset em disco, como um arquivo em disco.&lt;br/&gt;
-&lt;strong&gt;foreach&lt;/strong&gt;: executa uma função para cada elemento do dataset, em geral usado com variáveis acumuladoras&lt;br/&gt;&lt;/p&gt;
+&lt;strong&gt;foreach&lt;/strong&gt;: executa uma função para cada elemento do dataset, em geral usado com variáveis acumuladoras&lt;/p&gt;
 
 &lt;p&gt;Internamente, cada objeto RDD implementa uma interface simples, que consistem em 3 operações:&lt;/p&gt;
 
