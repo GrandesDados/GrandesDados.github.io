@@ -76,9 +76,8 @@ computá-lo a partir de um conjunto de dados.&lt;/li&gt;
 
 &lt;p&gt;Todas as transformações no Spark são lazy, ou seja, eles não são computados imediatamente. O processamento só irá acontecer quando uma ação for executada e o resultado precisar ser retornado para o programa driver.&lt;/p&gt;
 
-&lt;p&gt;Algumas operações de transformação:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;map&lt;/strong&gt;: retorna um novo RDD formado pelo resultado da função parâmetro para cada valor do conjunto.&lt;br/&gt;
+&lt;p&gt;Algumas operações de transformação:&lt;br/&gt;
+&lt;strong&gt;map&lt;/strong&gt;: retorna um novo RDD formado pelo resultado da função parâmetro para cada valor do conjunto.&lt;br/&gt;
 &lt;strong&gt;filter&lt;/strong&gt;: filtra cada elemento do dataset a partir de uma função parâmetro.&lt;br/&gt;
 &lt;strong&gt;sample&lt;/strong&gt;: retorna uma amostra a partir do dataset.&lt;br/&gt;
 &lt;strong&gt;union&lt;/strong&gt;: faz a união de 2 RDDs.&lt;br/&gt;
@@ -87,7 +86,7 @@ computá-lo a partir de um conjunto de dados.&lt;/li&gt;
 &lt;strong&gt;reduceByKey&lt;/strong&gt;: executa uma operação de reduce para cada valor que compartilha a mesma chave.&lt;br/&gt;
 &lt;strong&gt;cartesian&lt;/strong&gt;: retorna o produto cartesiano entre 2 datasets.&lt;br/&gt;&lt;/p&gt;
 
-&lt;p&gt;Algumas operações de ação:
+&lt;p&gt;Algumas operações de ação:&lt;br/&gt;
 &lt;strong&gt;reduce&lt;/strong&gt;: agrega os elementos do dataset usando uma função parâmetro que retornar um valor único.&lt;br/&gt;
 &lt;strong&gt;collect&lt;/strong&gt;: retorna todos os elementos do RDD como um array.
 &lt;strong&gt;count&lt;/strong&gt;: retorna o números de elementos do dataset.&lt;br/&gt;
