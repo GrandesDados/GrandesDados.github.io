@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  	<meta property="og:title" content=" Como Spark usa a memória para obter performance superior ao MapReduce &middot;  Grandes Dados" />
+  	<meta property="og:site_name" content="Grandes Dados" />
+  	<meta property="og:url" content="http://grandesdados.com/post/como-o-spark-usa-memoria-para-obter-performance-superior-ao-mapreduce/" />
+    
+    
+  	<meta property="og:type" content="article" />
+
+    <meta property="og:article:published_time" content="2015-07-20T16:11:34-03:00" />
+
+    
+    <meta property="og:article:tag" content="spark" />
+    
+    <meta property="og:article:tag" content="apache" />
+    
+    <meta property="og:article:tag" content="mapreduce" />
+    
+    <meta property="og:article:tag" content="hadoop" />
+    
+    
+
+  <title>
+     Como Spark usa a memória para obter performance superior ao MapReduce &middot;  Grandes Dados
+  </title>
+
+    <meta name="description" content="Blog de BigData" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="http://grandesdados.com/images/favicon.ico">
+	  <link rel="apple-touch-icon" href="http://grandesdados.com/images/apple-touch-icon.png" />
+    
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
+
+
+    
+      
+          <link href="http://grandesdados.com/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
+      
+      
+    
+    <meta name="generator" content="Hugo 0.14" />
+
+    <link rel="canonical" href="http://grandesdados.com/post/como-o-spark-usa-memoria-para-obter-performance-superior-ao-mapreduce/" />
+
+    
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-38960920-6', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    
+</head>
+<body class="nav-closed">
+
+  <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="http://grandesdados.com/">Blog</a>
+            </li>
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="https://github.com/GrandesDados">GitHub</a>
+            </li>
+        
+    </ul>
+    
+    
+    <a class="subscribe-button icon-feed" href="http://grandesdados.com/index.xml">Subscribe</a>
+    
+</div>
+<span class="nav-cover"></span>
+
+
+ <div class="site-wrapper">
+
+
+
+<header class="main-header post-head no-cover">
+  <nav class="main-nav clearfix">
+
+
+  
+  
+      <a class="menu-button" href="#"><span class="burger">&#9776;</span><span class="word">Menu</span></a>
+  
+  </nav>
+</header>
+
+
+
+<main class="content" role="main">
+
+
+
+
+  <article class="post post">
+
+    <header class="post-header">
+        <h1 class="post-title">Como Spark usa a memória para obter performance superior ao MapReduce</h1>
+        <section class="post-meta">
+        
+          <time class="post-date" datetime="2015-07-20T16:11:34-03:00">
+            Jul 20, 2015
+          </time>
+        
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/spark/">#spark</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/apache/">#apache</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/mapreduce/">#mapreduce</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/hadoop/">#hadoop</a></span>
+         
+        </section>
+    </header>
+  
+    <section class="post-content">
+      
+
+<p>Muitas Aplicações de Big Data executam múltiplas operações paralelas sobre o mesmo conjunto de dados. No tradicional modelo MapReduce, estes algoritmos exigem o encadeamento múltiplas operações de map e reduce o que torna o processo lento e dispendioso.</p>
+
+<blockquote>
+<p>O Spark é um framework de processamento paralelo que que visa atender
+aplicações que se beneficiam do reuso de um conjunto de dados,
+mantendo a escalabilidade e tolerança a falhas encontradas no modelo
+MapReduce.</p>
+</blockquote>
+
+<h2 id="rdd-resilient-distributed-dataset:aeed7472b10a84461abb6a3dcf5257fc">RDD (Resilient Distributed Dataset)</h2>
+
+<p>O ponto central do Spark, e razão de sua eficiência, é sua estrutura de dados distribuída, o RDD (Resilient Distributed Dataset). Esta é uma abstração de dados tolerante a falha e paralela. O princípio básido do RDD é que cada estrutura contém informação suficiente para computar todas as transformações dos dados a partir do passo anterior. Ou seja, se um nó falha, a computação referente à partição RDD naquele nó pode ser refeita desde o ponto onde os dados estão acessíveis, seja uma partição de um arquivo no cluster, ou dados em memória de outro nó.</p>
+
+<p>RDDs são criados a partir de operações determinísticas sobre alguma unidade persistente de armazenamento ou outros RDDs. Os elementos de um RDD não precisam ser materializados em memória a cada transformação. As partições vão sendo transformadas sob demanda e descartadas depois de usadas, a menos que o usuário explicitamente solicite que o dado seja persistido. Por esta razão, os RDDs são considerados lazy e transitórios. Veja o exemplo:</p>
+
+<pre><code>val file = spark.textFile(&quot;hdfs://...&quot;)
+val errs = file.filter(_.contains(&quot;ERROR&quot;))
+val ones = errs.map(_ =&gt; 1)
+val count = ones.reduce(_+_)
+</code></pre>
+
+<p>Linha 1: um RDD é criado para ler um arquivo em disco;
+Linha 2: outro RDD é criado e filtra linhas que contenham a palavra &ldquo;ERROR&rdquo;;
+Linha 3: para cada linha com a palavra &ldquo;ERROR&rdquo;, uma operação de map associa ao valor 1 em outro RDD;
+Linha 4: Uma operação de reduce, soma todos os valores e retorna para o programa driver.</p>
+
+<p><img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg" alt="Encadeamento de dependências dos RDDs" />
+</p>
+
+<h2 id="rdd-versus-memória-compartilhada:aeed7472b10a84461abb6a3dcf5257fc">RDD versus Memória Compartilhada</h2>
+
+<p>Os RDDs podem ser comparados com sistemas de memória compartilhada. A principal diferença entre os dois modelos é que RDDs só podem ser criados a partir de um encadeamento de transformações nos dados, enquanto o modelo de memória compartilhada permite ler e escrever em qualquer localização do espaço de endereçamento global.</p>
+
+<p>Muitos sistemas de memória compartilhada ofercem tolerância a falha a partir de checkpoints. Este tipo de abordagem exige que todas as partições sejam reconstruídas a partir de um ponto de recuperação e toda a computação seja refeita desde aquele ponto. Também adicionam um custo extra para o armazenamento dos estados. O RDD, apesar de tornar o modelo de programação mais restrito, permite reconstrução dos dados de maneira eficiente, em caso de falha de um nó.</p>
+
+<p>A natureza imutável do RDD também permite que múltiplas cópias de um mesmo processamento sejam executadas em paralelo (tarefas backup), evitando que nós lentos engargalem todo o sistema, da mesma maneira que acontece no modelo MapReduce. Tarefas backup são difíceis de serem implementadas no modelo de memória compartilhada, já que duas cópias de uma mesma tarefa podem escrever na mesma área da memória global e interferir uma na outra.</p>
+
+<p>Quando não há espaço suficiente para armazenar os dados em memória, os RDDs têm performance similar aos sistemas paralelos atuais, como o MapReduce, já que irão armazenar os dados em disco.</p>
+
+<h2 id="processamento-paralelo:aeed7472b10a84461abb6a3dcf5257fc">Processamento Paralelo</h2>
+
+<p>O Spark foi construído a partir do sistema Mesos, uma espécie de sistema operacional de cluster, que cria uma abstração para que aplicações Spark possam usufruir de um cluster Hadoop. O Spark é escrito em Scala e os usuários podem escrever seu código em Scala, Java ou Python.</p>
+
+<p>Uma aplicação Spark é composta de apenas um código principal, chamado de driver, que se conecta aos workers do cluster. O driver define um ou mais RDDs e realiza operações sobre eles.
+<img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png" alt="Arquitetura de tarefas Spark" />
+</p>
+
+<p>As operações sobre os RDDs podem ser de dois tipos:</p>
+
+<ul>
+<li>Transformações: cria um novo conjunto de dados a partir de uma
+operação em um dataset já existente;</li>
+<li>Ações: retorna um valor para o programa driver depois de
+computá-lo a partir de um conjunto de dados.</li>
+</ul>
+
+<p>Todas as transformações no Spark são lazy, ou seja, eles não são computados imediatamente. O processamento só irá acontecer quando uma ação for executada e o resultado precisar ser retornado para o programa driver.</p>
+
+<p>Algumas operações de transformação:</p>
+
+<p><strong>map</strong>: retorna um novo RDD formado pelo resultado da função parâmetro para cada valor do conjunto.<br/>
+<strong>filter</strong>: filtra cada elemento do dataset a partir de uma função parâmetro.<br/>
+<strong>sample</strong>: retorna uma amostra a partir do dataset.<br/>
+<strong>union</strong>: faz a união de 2 RDDs.<br/>
+<strong>intersection</strong>: retorna os elementos que pertencem a interseção entre 2 RDDs.<br/>
+<strong>distinct</strong>: elimina elementos duplicados do conjunto.<br/>
+<strong>reduceByKey</strong>: executa uma operação de reduce para cada valor que compartilha a mesma chave.<br/>
+<strong>cartesian</strong>: retorna o produto cartesiano entre 2 datasets.<br/></p>
+
+<p>Algumas operações de ação:
+<strong>reduce</strong>: agrega os elementos do dataset usando uma função parâmetro que retornar um valor único.<br/>
+<strong>collect</strong>: retorna todos os elementos do RDD como um array.
+<strong>count</strong>: retorna o números de elementos do dataset.<br/>
+<strong>take</strong>: retorna os n primeiro elementos do conjunto como um array.<br/>
+<strong>saveAsTextFile</strong>: salva o dataset em disco, como um arquivo em disco.<br/>
+<strong>foreach</strong>: executa uma função para cada elemento do dataset, em geral usado com variáveis acumuladoras<br/></p>
+
+<p>Internamente, cada objeto RDD implementa uma interface simples, que consistem em 3 operações:</p>
+
+<p><code>getPartitions()</code> - retorna uma lista de IDs de partições.<br/>
+<code>getIterator(parition)</code> - retorna um iterator de partições.<br/>
+<code>getPreferredLocations(partition)</code> - usado para o escalonador identificar a localização dos dados.</p>
+
+<p>Quando uma operação paralela é chamada sobre um dataset, o Spark cria tarefas para processar cada partição do dataset e envia essas tarefas para os nós workers. A localização de cada tarefa vai ser influenciada pelo resultado do método getPreferredLocations() do RDD. Uma vez iniciada no worker, cada tarefa irá chamar o método getIterator para começar a ler os dados da partição.</p>
+
+<p>RDDs podem ser criados a partir de 4 fontes:</p>
+
+<ul>
+<li>Arquivos em disco em um sistema HDFS;</li>
+<li>Paralelizando uma coleção, por exemplo um array</li>
+<li>Transformando um RDD existente, usando uma operação de flatMap (filter, map)</li>
+<li>Mudando a persistência de um RDD existente.
+
+<ul>
+<li>É possível manter o RDD em memória, depois da primeira vez que ele foi computado; Se não houver memória suficiente, o Spark irá salvar os dados em disco.</li>
+<li>Salvando o RDD no sistema de arquivos, como o
+HDFS.</li>
+</ul></li>
+</ul>
+
+<h2 id="variáveis-compartilhadas:aeed7472b10a84461abb6a3dcf5257fc">Variáveis compartilhadas</h2>
+
+<p>As operações são informadas por meio de closures. A linguagem Scala representa cada closure como um objeto Java, que pode ser serializado e enviado pela rede. Para manter as mesmas variáveis acessíveis nas closures, o Scala empacota as variáveis no objeto java que representa a closure. Existem alguns tipos especiais de variáveis para lidar com dados compartilhados entre múltiplos workers:</p>
+
+<p><strong>Variáveis de broadcast</strong></p>
+
+<p>Se um dado que não será atualizado (somente leitura) é compartilhado por múltiplas operações paralelas, é preferível distribuí-lo pelos workers, ao invés de empacotá-lo a cada vez que uma closure irá rodar. As variáveis de broadcast, portanto, são criadas uma única vez e propagadas para consulta.</p>
+
+<p><strong>Variáveis acumuladoras</strong></p>
+
+<p>As variáveis acumuladoras permitem aos workers “adicionar” dados usando uma função associativa que apenas o programa driver será capaz de ler. Este tipo de variável é bastante útil na criação de contadores ou somas globais.</p>
+
+<hr />
+
+<p>O Spark tem se mostrado uma ótima alternativa para processamento de Big Data sobretudo em algoritmos que iteram múltiplas vezes sobre o mesmo conjunto de dados. Sua performance superior ao MapReduce tem sido comprovada por diversos benchmarks e experimentos.</p>
+
+<p>O Spark também tem chamado atenção pela sua forma elegante e simplificada de desenvolvimento. Disponível em 3 linguagens (Scala, Java e Python), o uso de closures (disponível no Java 8) enxuga bastante o código. Spark provê uma rica biblioteca de operadores, que executam tarefas em paralelo, sem as necessidades especiais que existiam no modelo MapReduce.</p>
+
+<p>O projeto Spark tem um desenvolvimento bastante intenso e um grande número de empresas investindo em seu crescimento. Vale a pena experimentar!</p>
+
+    </section>
+
+
+  <footer class="post-footer">
+
+
+    
+
+    
+
+
+
+
+
+<section class="author">
+  <h4><a href="http://grandesdados.com/"></a></h4>
+  
+  <p>Read <a href="http://grandesdados.com/">more posts</a> by this author.</p>
+  
+  <div class="author-meta">
+    
+    
+  </div>
+</section>
+
+
+
+    
+    <section class="share">
+      <h4>Share this post</h4>
+      <a class="icon-twitter" style="font-size: 1.4em" href="https://twitter.com/share?text=Como%20Spark%20usa%20a%20mem%c3%b3ria%20para%20obter%20performance%20superior%20ao%20MapReduce&amp;url=http%3a%2f%2fgrandesdados.com%2fpost%2fcomo-o-spark-usa-memoria-para-obter-performance-superior-ao-mapreduce%2f"
+          onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <span class="hidden">Twitter</span>
+      </a>
+      <a class="icon-facebook" style="font-size: 1.4em" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fgrandesdados.com%2fpost%2fcomo-o-spark-usa-memoria-para-obter-performance-superior-ao-mapreduce%2f"
+          onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <span class="hidden">Facebook</span>
+      </a>
+      <a class="icon-google-plus" style="font-size: 1.4em" href="https://plus.google.com/share?url=http%3a%2f%2fgrandesdados.com%2fpost%2fcomo-o-spark-usa-memoria-para-obter-performance-superior-ao-mapreduce%2f"
+         onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <span class="hidden">Google+</span>
+      </a>
+    </section>
+    
+
+    
+    
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname = 'grandesdados';
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+    
+
+  </footer>
+</article>
+
+</main>
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="">Grandes Dados</a> Todos os direitos reservados - 2015</section>
+        
+        <section class="poweredby">Proudly generated by <a class="icon-hugo" href="http://gohugo.io">HUGO</a>, with <a class="icon-theme" href="https://github.com/vjeantet/hugo-theme-casper">Casper</a> theme</section>
+        
+    </footer>
+    </div>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/index.js"></script>
+
+</body>
+</html>
+

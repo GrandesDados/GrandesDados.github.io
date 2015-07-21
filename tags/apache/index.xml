@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Grandes Dados</title>
-    <link>http://grandesdados.com/</link>
-    <description>Recent content on Grandes Dados</description>
+    <title>Apache on Grandes Dados</title>
+    <link>http://grandesdados.com/tags/apache/</link>
+    <description>Recent content in Apache on Grandes Dados</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
     <lastBuildDate>Mon, 20 Jul 2015 16:11:34 -0300</lastBuildDate>
-    <atom:link href="http://grandesdados.com/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://grandesdados.com/tags/apache/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Como Spark usa a memória para obter performance superior ao MapReduce</title>
