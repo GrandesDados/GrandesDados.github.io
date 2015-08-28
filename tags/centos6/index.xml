@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Centos6 on Grandes Dados</title>
+    <link>http://localhost:1313/tags/centos6/</link>
+    <description>Recent content in Centos6 on Grandes Dados</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>pt-br</language>
+    <copyright>Todos os direitos reservados - 2015</copyright>
+    <lastBuildDate>Thu, 27 Aug 2015 20:41:23 -0300</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/centos6/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Compilação e Configuração do Hadoop na Máquina Local</title>
+      <link>http://localhost:1313/post/hadoop-local/</link>
+      <pubDate>Thu, 27 Aug 2015 20:41:23 -0300</pubDate>
+      
+      <guid>http://localhost:1313/post/hadoop-local/</guid>
+      <description>
+
+&lt;p&gt;Para esse procedimento, é assumido que o Docker esteja instalado e funcionando; também é assumido acesso à Internet.&lt;/p&gt;
+
+&lt;p&gt;(originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto)&lt;/p&gt;
+
+&lt;h2 id=&#34;compilação:fa0751dde3433fb979cbccc047d3bfc8&#34;&gt;Compilação&lt;/h2&gt;
+
+&lt;p&gt;Documento com instruções de build do Hadoop &lt;a href=&#34;https://github.com/apache/hadoop/blob/trunk/BUILDING.txt&#34;&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;O resultado desse procedimento é um pacote do Hadoop com as bibliotecas nativas compiladas para o CentOS6.&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Instalação do container Docker na Máquina local.
+&lt;br/&gt;(abre a shell dentro do container)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo docker run -i -t centos:6 /bin/bash
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Criação do usuário e local a serem usados na compilação e e geração do pacote.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# adduser -m -d /hadoop hadoop
+# cd hadoop
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instalação das dependências para compilar as bibliotecas nativas.
+&lt;br/&gt;(específicas para o host, CentOS6)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# yum install -y tar gzip gcc-c++ cmake zlib zlib-devel openssl openssl-devel fuse fuse-devel bzip2 bzip2-devel snappy snappy-devel
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instalação do Protobuf usado no Hadoop.
+&lt;br/&gt;(não tem no CentOS6)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# curl -L -O https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
+# tar zxf protobuf-2.5.0.tar.gz
+# cd protobuf-2.5.0
+# ./configure --prefix=/usr --libdir=/usr/lib64
+# make
+# make check
+# make install
+
+# cd ..
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instalação do Jansson usado no WebHDFS.
+&lt;br/&gt;(não tem no CentOS6)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# curl -O http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
+# tar zxf jansson-2.7.tar.gz
+# cd jansson-2.7
+# ./configure --prefix=/usr --libdir=/usr/lib64
+# make
+# make install
+
+# cd ..
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instalação do JDK.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# curl -k -L -H &amp;quot;Cookie: oraclelicense=accept-securebackup-cookie&amp;quot; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
+# rpm -i jdk-8u60-linux-x64.rpm
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Instalação do Maven.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+# tar zxf apache-maven-3.3.3-bin.tar.gz
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Compilação do Hadoop.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# su - hadoop
+
+$ export PATH=$PATH:/hadoop/apache-maven-3.3.3/bin
+
+$ curl -O http://archive.apache.org/dist/hadoop/common/hadoop-2.7.1/hadoop-2.7.1-src.tar.gz
+$ tar zxf hadoop-2.7.1-src.tar.gz
+$ cd hadoop-2.7.1-src
+
+$ mvn clean package -Pdist,native -DskipTests -Drequire.snappy -Drequire.openssl -Dtar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Bateria de Testes.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir hadoop-common-project/hadoop-common/target/test-classes/webapps/test
+
+$ mvn test -Pnative -Drequire.snappy -Drequire.openssl -Dmaven.test.failure.ignore=true -Dsurefire.rerunFailingTestsCount=3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(alguns testes com falha intermitente)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;org.apache.hadoop.ipc.TestDecayRpcScheduler#testAccumulate
+org.apache.hadoop.ipc.TestDecayRpcScheduler#testPriority
+org.apache.hadoop.hdfs.server.datanode.TestDataNodeMetrics#testDataNodeTimeSpend
+org.apache.hadoop.hdfs.shortcircuit.TestShortCircuitCache#testDataXceiverHandlesRequestShortCircuitShmFailure
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;configuração:fa0751dde3433fb979cbccc047d3bfc8&#34;&gt;Configuração&lt;/h2&gt;
+
+&lt;p&gt;Procedimento para configuração local do Hadoop em modo pseudo-distribuído com uma JVM por serviço.&lt;/p&gt;
+
+&lt;p&gt;Serviços:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;HDFS: NameNode, SecondaryNameNode, DataNode&lt;/li&gt;
+&lt;li&gt;YARN: ResouceManager, NodeManager, JobHistory&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Requisitos:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Java8&lt;/li&gt;
+&lt;li&gt;SSH&lt;/li&gt;
+&lt;li&gt;rsync&lt;/li&gt;
+&lt;li&gt;zlib&lt;/li&gt;
+&lt;li&gt;openssl&lt;/li&gt;
+&lt;li&gt;fuse&lt;/li&gt;
+&lt;li&gt;bzip2&lt;/li&gt;
+&lt;li&gt;snappy&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&amp;lsquo;ssh localhost&amp;rsquo; tem que abrir um shell sem pedir senha (usando authorized_keys)&lt;/p&gt;
+
+&lt;p&gt;Diretório:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;/data/hadoop&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Instalação do Hadoop&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(versão atual é a 2.7.1)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tar zxf hadoop-2.7.1.tar.gz -C /opt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Configurar &lt;code&gt;JAVA_HOME&lt;/code&gt; no arquivo &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/hadoop-env.sh&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;export JAVA_HOME=&amp;quot;...&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/home/hadoop/.bash_profile&lt;/code&gt;:
+&lt;br/&gt;(scripts do Hadoop no PATH)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;export PATH=$PATH:/opt/hadoop-2.7.1/bin:/opt/hadoop-2.7.1/sbin
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Verificação)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hadoop version
+[...]
+Hadoop 2.7.1
+Subversion https://git-wip-us.apache.org/repos/asf/hadoop.git -r cc72e9b000545b86b75a61f4835eb86d57bfafc0
+Compiled by jenkins on 2014-11-14T23:45Z
+Compiled with protoc 2.5.0
+From source with checksum df7537a4faa4658983d397abf4514320
+This command was run using /opt/hadoop-2.7.1/share/hadoop/common/hadoop-common-2.7.1.jar
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/core-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;hadoop.tmp.dir&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;/data/hadoop&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;fs.defaultFS&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;hdfs://localhost&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/hdfs-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;dfs.replication&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;1&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;dfs.blocksize&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;8M&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/yarn-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;yarn.nodemanager.aux-services&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;mapreduce_shuffle&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/mapred-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;mapreduce.framework.name&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;yarn&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;mapreduce.jobtracker.staging.root.dir&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;/user&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Setup Inicial&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(antes da primeira inicialização)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hdfs namenode -format
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Start/Stop&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ start-dfs.sh
+$ start-yarn.sh
+$ mr-jobhistory-daemon.sh start historyserver
+
+$ stop-yarn.sh
+$ stop-dfs.sh
+$ mr-jobhistory-daemon.sh stop historyserver
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Console Web&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;HDFS&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:50070/&#34;&gt;http://localhost:50070/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;YARN&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:8088/&#34;&gt;http://localhost:8088/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Job History&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://localhost:19888/&#34;&gt;http://localhost:19888/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Teste MR&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(Teste 1) Cálculo do Pi&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ yarn jar /opt/hadoop-2.5.2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar pi 16 100000
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(Teste 2) Grep&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ hdfs dfs -put /opt/hadoop-2.5.2/etc/hadoop /hadoop_test
+
+$ yarn jar /opt/hadoop-2.5.2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar grep /hadoop_test /hadoop_output &#39;dfs[a-z.]+&#39;
+
+$ hdfs dfs -cat /hadoop_output/*
+[...]
+6       dfs.audit.logger4       dfs.class
+3       dfs.server.namenode.
+2       dfs.period
+2       dfs.audit.log.maxfilesize
+2       dfs.audit.log.maxbackupindex
+1       dfsmetrics.log
+1       dfsadmin
+1       dfs.servers
+1       dfs.replication
+1       dfs.file
+
+$ hdfs dfs -rm -r /hadoop_test /hadoop_output
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  	<meta property="og:title" content=" Compilação e Configuração do Hadoop na Máquina Local &middot;  Grandes Dados" />
+  	<meta property="og:site_name" content="Grandes Dados" />
+  	<meta property="og:url" content="http://localhost:1313/post/hadoop-local/" />
+    
+    
+  	<meta property="og:type" content="article" />
+
+    <meta property="og:article:published_time" content="2015-08-27T20:41:23-03:00" />
+
+    
+    <meta property="og:article:tag" content="Hadoop" />
+    
+    <meta property="og:article:tag" content="Docker" />
+    
+    <meta property="og:article:tag" content="CentOS6" />
+    
+    
+
+  <title>
+     Compilação e Configuração do Hadoop na Máquina Local &middot;  Grandes Dados
+  </title>
+
+    <meta name="description" content="Blog de BigData" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="http://localhost:1313/images/favicon.ico">
+	  <link rel="apple-touch-icon" href="http://localhost:1313/images/apple-touch-icon.png" />
+    
+    <link rel="stylesheet" type="text/css" href="http://localhost:1313/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
+
+
+    
+      
+          <link href="http://localhost:1313/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
+      
+      
+    
+    <meta name="generator" content="Hugo 0.14" />
+
+    <link rel="canonical" href="http://localhost:1313/post/hadoop-local/" />
+
+    
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-38960920-6', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    
+</head>
+<body class="nav-closed">
+
+  <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="http://localhost:1313/">Blog</a>
+            </li>
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="https://github.com/GrandesDados">GitHub</a>
+            </li>
+        
+    </ul>
+    
+    
+    <a class="subscribe-button icon-feed" href="http://localhost:1313/index.xml">Subscribe</a>
+    
+</div>
+<span class="nav-cover"></span>
+
+
+ <div class="site-wrapper">
+
+
+
+<header class="main-header post-head no-cover">
+  <nav class="main-nav clearfix">
+
+
+  
+  
+      <a class="menu-button" href="#"><span class="burger">&#9776;</span><span class="word">Menu</span></a>
+  
+  </nav>
+</header>
+
+
+
+<main class="content" role="main">
+
+
+
+
+  <article class="post post">
+
+    <header class="post-header">
+        <h1 class="post-title">Compilação e Configuração do Hadoop na Máquina Local</h1>
+        <section class="post-meta">
+        
+          <time class="post-date" datetime="2015-08-27T20:41:23-03:00">
+            Aug 27, 2015
+          </time>
+        
+         
+          <span class="post-tag small"><a href="http://localhost:1313/tags/hadoop/">#Hadoop</a></span>
+         
+          <span class="post-tag small"><a href="http://localhost:1313/tags/docker/">#Docker</a></span>
+         
+          <span class="post-tag small"><a href="http://localhost:1313/tags/centos6/">#CentOS6</a></span>
+         
+        </section>
+    </header>
+  
+    <section class="post-content">
+      
+
+<p>Para esse procedimento, é assumido que o Docker esteja instalado e funcionando; também é assumido acesso à Internet.</p>
+
+<p>(originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto)</p>
+
+<h2 id="compilação:fa0751dde3433fb979cbccc047d3bfc8">Compilação</h2>
+
+<p>Documento com instruções de build do Hadoop <a href="https://github.com/apache/hadoop/blob/trunk/BUILDING.txt">aqui</a>.</p>
+
+<p>O resultado desse procedimento é um pacote do Hadoop com as bibliotecas nativas compiladas para o CentOS6.</p>
+
+<p>&hellip;</p>
+
+<p>Instalação do container Docker na Máquina local.
+<br/>(abre a shell dentro do container)</p>
+
+<pre><code>$ sudo docker run -i -t centos:6 /bin/bash
+</code></pre>
+
+<p>Criação do usuário e local a serem usados na compilação e e geração do pacote.</p>
+
+<pre><code># adduser -m -d /hadoop hadoop
+# cd hadoop
+</code></pre>
+
+<p>Instalação das dependências para compilar as bibliotecas nativas.
+<br/>(específicas para o host, CentOS6)</p>
+
+<pre><code># yum install -y tar gzip gcc-c++ cmake zlib zlib-devel openssl openssl-devel fuse fuse-devel bzip2 bzip2-devel snappy snappy-devel
+</code></pre>
+
+<p>Instalação do Protobuf usado no Hadoop.
+<br/>(não tem no CentOS6)</p>
+
+<pre><code># curl -L -O https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
+# tar zxf protobuf-2.5.0.tar.gz
+# cd protobuf-2.5.0
+# ./configure --prefix=/usr --libdir=/usr/lib64
+# make
+# make check
+# make install
+
+# cd ..
+</code></pre>
+
+<p>Instalação do Jansson usado no WebHDFS.
+<br/>(não tem no CentOS6)</p>
+
+<pre><code># curl -O http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
+# tar zxf jansson-2.7.tar.gz
+# cd jansson-2.7
+# ./configure --prefix=/usr --libdir=/usr/lib64
+# make
+# make install
+
+# cd ..
+</code></pre>
+
+<p>Instalação do JDK.</p>
+
+<pre><code># curl -k -L -H &quot;Cookie: oraclelicense=accept-securebackup-cookie&quot; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
+# rpm -i jdk-8u60-linux-x64.rpm
+</code></pre>
+
+<p>Instalação do Maven.</p>
+
+<pre><code># curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+# tar zxf apache-maven-3.3.3-bin.tar.gz
+</code></pre>
+
+<p>Compilação do Hadoop.</p>
+
+<pre><code># su - hadoop
+
+$ export PATH=$PATH:/hadoop/apache-maven-3.3.3/bin
+
+$ curl -O http://archive.apache.org/dist/hadoop/common/hadoop-2.7.1/hadoop-2.7.1-src.tar.gz
+$ tar zxf hadoop-2.7.1-src.tar.gz
+$ cd hadoop-2.7.1-src
+
+$ mvn clean package -Pdist,native -DskipTests -Drequire.snappy -Drequire.openssl -Dtar
+</code></pre>
+
+<p>Bateria de Testes.</p>
+
+<pre><code>$ mkdir hadoop-common-project/hadoop-common/target/test-classes/webapps/test
+
+$ mvn test -Pnative -Drequire.snappy -Drequire.openssl -Dmaven.test.failure.ignore=true -Dsurefire.rerunFailingTestsCount=3
+</code></pre>
+
+<p>(alguns testes com falha intermitente)</p>
+
+<pre><code>org.apache.hadoop.ipc.TestDecayRpcScheduler#testAccumulate
+org.apache.hadoop.ipc.TestDecayRpcScheduler#testPriority
+org.apache.hadoop.hdfs.server.datanode.TestDataNodeMetrics#testDataNodeTimeSpend
+org.apache.hadoop.hdfs.shortcircuit.TestShortCircuitCache#testDataXceiverHandlesRequestShortCircuitShmFailure
+</code></pre>
+
+<h2 id="configuração:fa0751dde3433fb979cbccc047d3bfc8">Configuração</h2>
+
+<p>Procedimento para configuração local do Hadoop em modo pseudo-distribuído com uma JVM por serviço.</p>
+
+<p>Serviços:</p>
+
+<ul>
+<li>HDFS: NameNode, SecondaryNameNode, DataNode</li>
+<li>YARN: ResouceManager, NodeManager, JobHistory</li>
+</ul>
+
+<p>Requisitos:</p>
+
+<ul>
+<li>Java8</li>
+<li>SSH</li>
+<li>rsync</li>
+<li>zlib</li>
+<li>openssl</li>
+<li>fuse</li>
+<li>bzip2</li>
+<li>snappy</li>
+</ul>
+
+<p>&lsquo;ssh localhost&rsquo; tem que abrir um shell sem pedir senha (usando authorized_keys)</p>
+
+<p>Diretório:</p>
+
+<ul>
+<li>/data/hadoop</li>
+</ul>
+
+<p>&hellip;</p>
+
+<p><strong>Instalação do Hadoop</strong></p>
+
+<p>(versão atual é a 2.7.1)</p>
+
+<pre><code>$ tar zxf hadoop-2.7.1.tar.gz -C /opt
+</code></pre>
+
+<p>Configurar <code>JAVA_HOME</code> no arquivo <code>/opt/hadoop-2.7.1/etc/hadoop/hadoop-env.sh</code>:</p>
+
+<pre><code>export JAVA_HOME=&quot;...&quot;
+</code></pre>
+
+<p>Editar <code>/home/hadoop/.bash_profile</code>:
+<br/>(scripts do Hadoop no PATH)</p>
+
+<pre><code>export PATH=$PATH:/opt/hadoop-2.7.1/bin:/opt/hadoop-2.7.1/sbin
+</code></pre>
+
+<p>(Verificação)</p>
+
+<pre><code>$ hadoop version
+[...]
+Hadoop 2.7.1
+Subversion https://git-wip-us.apache.org/repos/asf/hadoop.git -r cc72e9b000545b86b75a61f4835eb86d57bfafc0
+Compiled by jenkins on 2014-11-14T23:45Z
+Compiled with protoc 2.5.0
+From source with checksum df7537a4faa4658983d397abf4514320
+This command was run using /opt/hadoop-2.7.1/share/hadoop/common/hadoop-common-2.7.1.jar
+</code></pre>
+
+<p>Editar <code>/opt/hadoop-2.7.1/etc/hadoop/core-site.xml</code>:</p>
+
+<pre><code class="language-xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;
+        &lt;value&gt;/data/hadoop&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;fs.defaultFS&lt;/name&gt;
+        &lt;value&gt;hdfs://localhost&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>Editar <code>/opt/hadoop-2.7.1/etc/hadoop/hdfs-site.xml</code>:</p>
+
+<pre><code class="language-xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.replication&lt;/name&gt;
+        &lt;value&gt;1&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.blocksize&lt;/name&gt;
+        &lt;value&gt;8M&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>Editar <code>/opt/hadoop-2.7.1/etc/hadoop/yarn-site.xml</code>:</p>
+
+<pre><code class="language-xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>Editar <code>/opt/hadoop-2.7.1/etc/hadoop/mapred-site.xml</code>:</p>
+
+<pre><code class="language-xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;
+        &lt;value&gt;yarn&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;mapreduce.jobtracker.staging.root.dir&lt;/name&gt;
+        &lt;value&gt;/user&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p><strong>Setup Inicial</strong></p>
+
+<p>(antes da primeira inicialização)</p>
+
+<pre><code>$ hdfs namenode -format
+</code></pre>
+
+<p><strong>Start/Stop</strong></p>
+
+<pre><code>$ start-dfs.sh
+$ start-yarn.sh
+$ mr-jobhistory-daemon.sh start historyserver
+
+$ stop-yarn.sh
+$ stop-dfs.sh
+$ mr-jobhistory-daemon.sh stop historyserver
+</code></pre>
+
+<p><strong>Console Web</strong></p>
+
+<p>HDFS</p>
+
+<p><a href="http://localhost:50070/">http://localhost:50070/</a></p>
+
+<p>YARN</p>
+
+<p><a href="http://localhost:8088/">http://localhost:8088/</a></p>
+
+<p>Job History</p>
+
+<p><a href="http://localhost:19888/">http://localhost:19888/</a></p>
+
+<p><strong>Teste MR</strong></p>
+
+<p>(Teste 1) Cálculo do Pi</p>
+
+<pre><code>$ yarn jar /opt/hadoop-2.5.2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar pi 16 100000
+</code></pre>
+
+<p>(Teste 2) Grep</p>
+
+<pre><code>$ hdfs dfs -put /opt/hadoop-2.5.2/etc/hadoop /hadoop_test
+
+$ yarn jar /opt/hadoop-2.5.2/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.5.2.jar grep /hadoop_test /hadoop_output 'dfs[a-z.]+'
+
+$ hdfs dfs -cat /hadoop_output/*
+[...]
+6       dfs.audit.logger4       dfs.class
+3       dfs.server.namenode.
+2       dfs.period
+2       dfs.audit.log.maxfilesize
+2       dfs.audit.log.maxbackupindex
+1       dfsmetrics.log
+1       dfsadmin
+1       dfs.servers
+1       dfs.replication
+1       dfs.file
+
+$ hdfs dfs -rm -r /hadoop_test /hadoop_output
+</code></pre>
+
+    </section>
+
+
+  <footer class="post-footer">
+
+
+    
+
+    
+
+
+
+
+
+<section class="author">
+  <h4><a href="http://localhost:1313/">Ciro Cavani</a></h4>
+  
+  <p>Sou formado em Engenharia de Computação pelo Instituto Tecnológico de Aeronáutica (ITA) e faço mestrado em Inteligência Artificial na Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio). Trabalho na Globo.com no time de Personalização que é responsável pelo desenvolvimento da Plataforma de BigData usada em Produtos de Dados, como o Sistema de Recomendação. Tenho experiência no desenvolvimento de plataformas para coleta, armazenamento e análise de grande volume de dados com objetivo de agregar valor ao negócio da empresa.</p>
+  
+  <div class="author-meta">
+    <span class="author-location icon-location">Rio de Janeiro, RJ</span>
+    <span class="author-link icon-link"><a href="https://www.linkedin.com/in/cirocavani">https://www.linkedin.com/in/cirocavani</a></span>
+  </div>
+</section>
+
+
+
+    
+    <section class="share">
+      <h4>Share this post</h4>
+      <a class="icon-twitter" style="font-size: 1.4em" href="https://twitter.com/share?text=Compila%c3%a7%c3%a3o%20e%20Configura%c3%a7%c3%a3o%20do%20Hadoop%20na%20M%c3%a1quina%20Local&amp;url=http%3a%2f%2flocalhost%3a1313%2fpost%2fhadoop-local%2f"
+          onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <span class="hidden">Twitter</span>
+      </a>
+      <a class="icon-facebook" style="font-size: 1.4em" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2flocalhost%3a1313%2fpost%2fhadoop-local%2f"
+          onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <span class="hidden">Facebook</span>
+      </a>
+      <a class="icon-google-plus" style="font-size: 1.4em" href="https://plus.google.com/share?url=http%3a%2f%2flocalhost%3a1313%2fpost%2fhadoop-local%2f"
+         onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <span class="hidden">Google+</span>
+      </a>
+    </section>
+    
+
+    
+    
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname = 'grandesdados';
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+    
+
+  </footer>
+</article>
+
+</main>
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="">Grandes Dados</a> Todos os direitos reservados - 2015</section>
+        
+        <section class="poweredby">Proudly generated by <a class="icon-hugo" href="http://gohugo.io">HUGO</a>, with <a class="icon-theme" href="https://github.com/vjeantet/hugo-theme-casper">Casper</a> theme</section>
+        
+    </footer>
+    </div>
+    <script type="text/javascript" src="http://localhost:1313/js/jquery.js"></script>
+    <script type="text/javascript" src="http://localhost:1313/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="http://localhost:1313/js/index.js"></script>
+
+<script data-no-instant>document.write('<script src="http://'
+        + (location.host || 'localhost').split(':')[0]
+		+ ':1313/livereload.js?mindelay=10"></'
+        + 'script>')</script></body>
+</html>
+
