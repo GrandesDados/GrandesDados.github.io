@@ -154,9 +154,9 @@
     <section class="post-content">
       
 
-<p>Esse tutorial é sobre a construção do pacote do Hadoop 2.7.1 para o CentOS6 / RHEL6 usando Docker. Esse procedimento é necessário para gerar as bibliotecas nativas compatíveis. A principal objetivo que motivou esse trabalho foi configurar o FairScheduler do YARN usando CGroups rodando no Red Hat Enterprise Linux 6 (RHEL6). O pacote Hadoop distribuído pela Apache tem executável binário que não é compatível com a Glibc que faz parte de CentOS6/RHEL6.</p>
+<p>Esse tutorial é sobre a construção do pacote do Hadoop 2.7.1 para o CentOS6 / RHEL6 usando Docker. Esse procedimento é necessário para gerar as bibliotecas nativas compatíveis. O principal objetivo que motivou esse trabalho foi configurar o FairScheduler do YARN usando CGroups rodando no Red Hat Enterprise Linux 6 (RHEL6). O pacote Hadoop distribuído pela Apache tem executável binário que não é compatível com a Glibc que faz parte de CentOS6/RHEL6.</p>
 
-<p>O RHEL6 é o sistema operacional homologado para as máquinas do cluster que usamos na Globo.com e foi necessário criar uma distribuição própria do Hadoop para que pudéssemos fazer uso do <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html">FairScheduler</a> juntamente com o <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/NodeManagerCgroups.html">CGroups</a> para limitar o uso de processamento entre as aplicações rodando nos mesmos NodeManager.</p>
+<p>O RHEL6 é o sistema operacional homologado para as máquinas do cluster que usamos na Globo.com e foi necessário criar uma distribuição própria do Hadoop para que pudéssemos fazer uso do <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html">FairScheduler</a> juntamente com o <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/NodeManagerCgroups.html">CGroups</a> para limitar o uso de processamento entre as aplicações rodando nos mesmos NodeManagers.</p>
 
 <p>Esse trabalho de configuração do Hadoop para uso compartilhado será assunto de outro artigo.</p>
 
@@ -166,7 +166,7 @@
 
 <p>Nesse procedimento, é necessário que o Docker esteja instalado e funcionando; também é necessário acesso à Internet.</p>
 
-<p>Originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto.</p>
+<p>Originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto/2015.</p>
 
 <p><a href="https://wiki.archlinux.org/index.php/Docker">https://wiki.archlinux.org/index.php/Docker</a></p>
 
@@ -194,15 +194,15 @@
 
 <p>Documento com instruções de build do Hadoop <a href="https://github.com/apache/hadoop/blob/release-2.7.1/BUILDING.txt">aqui</a>.</p>
 
-<p>O resultado desse procedimento é um pacote do Hadoop com as executáveis e bibliotecas nativos compilados para o CentOS6 que rodam no RHEL6.</p>
+<p>O resultado desse procedimento é um pacote do Hadoop com os executáveis e bibliotecas nativas compilados para o CentOS6 que rodam no RHEL6.</p>
 
 <p><code>/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2.7.1.tar.gz</code></p>
 
 <p>&hellip;</p>
 
-<p>Começamos com a criação de um conainer do Docker com a imagem do CentOS.</p>
+<p>Começamos com a criação de um conainer do Docker com a imagem do CentOS6.</p>
 
-<p>Ao executar o comando <code>run</code>, o Docker automaticamente será feito o download da imagem e a shell será inicializada dentro de um novo container.</p>
+<p>Ao executar o comando <code>run</code>, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.</p>
 
 <p>
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">sudo docker run -i -t centos:6 /bin/bash
@@ -273,7 +273,7 @@ cd ..</code></pre>
 rpm -i jdk-8u60-linux-x64.rpm</code></pre>
 </p>
 
-<p>No caso do Maven, usaremos o pacote binário de distribuição do Apache.</p>
+<p>No caso do Maven, usaremos o pacote binário de distribuição da Apache.</p>
 
 <p>
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
