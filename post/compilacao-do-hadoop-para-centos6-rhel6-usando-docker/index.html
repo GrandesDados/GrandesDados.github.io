@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    
+
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
   	<meta property="og:title" content=" Compilação do Hadoop para CentOS6 / RHEL6 usando Docker &middot;  Grandes Dados" />
   	<meta property="og:site_name" content="Grandes Dados" />
   	<meta property="og:url" content="http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker/" />
-    
+    <meta property="og:image" content="images/placeholder-share.jpg" />
+
     
   	<meta property="og:type" content="article" />
 
@@ -38,7 +39,7 @@
 
     <link rel="shortcut icon" href="http://grandesdados.com/images/favicon.ico">
 	  <link rel="apple-touch-icon" href="http://grandesdados.com/images/apple-touch-icon.png" />
-    
+
     <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/screen.css" />
     <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/nav.css" />
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
@@ -154,7 +155,7 @@
     <section class="post-content">
       
 
-<p>Esse tutorial é sobre a construção do pacote do Hadoop 2.7.1 para o CentOS6 / RHEL6 usando Docker. Esse procedimento é necessário para gerar as bibliotecas nativas compatíveis. O principal objetivo que motivou esse trabalho foi configurar o FairScheduler do YARN usando CGroups rodando no Red Hat Enterprise Linux 6 (RHEL6). O pacote Hadoop distribuído pela Apache tem executável binário que não é compatível com a Glibc que faz parte de CentOS6/RHEL6.</p>
+<p>Esse tutorial é sobre a construção do pacote do Hadoop 2.7.1 para o CentOS6 / RHEL6 usando Docker. Esse procedimento é necessário para gerar as bibliotecas nativas compatíveis. O principal objetivo que motivou esse trabalho foi configurar o FairScheduler do YARN usando CGroups rodando no Red Hat Enterprise Linux 6 (RHEL6). O pacote Hadoop distribuído pela Apache tem executável binário que não é compatível com a Glibc que faz parte do CentOS6/RHEL6.</p>
 
 <p>O RHEL6 é o sistema operacional homologado para as máquinas do cluster que usamos na Globo.com e foi necessário criar uma distribuição própria do Hadoop para que pudéssemos fazer uso do <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/FairScheduler.html">FairScheduler</a> juntamente com o <a href="http://hadoop.apache.org/docs/r2.7.1/hadoop-yarn/hadoop-yarn-site/NodeManagerCgroups.html">CGroups</a> para limitar o uso de processamento entre as aplicações rodando nos mesmos NodeManagers.</p>
 
@@ -180,7 +181,7 @@
 &gt;  Git commit:   d12ea79
 &gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &gt;  OS/Arch:      linux/amd64
-&gt; 
+&gt;
 &gt; Server:
 &gt;  Version:      1.8.1
 &gt;  API version:  1.20
@@ -209,10 +210,10 @@
 
 &gt; Unable to find image &#39;centos:6&#39; locally
 &gt; 6: Pulling from library/centos
-&gt; 
-&gt; f1b10cd84249: Pull complete 
-&gt; fb9cc58bde0c: Pull complete 
-&gt; a005304e4e74: Already exists 
+&gt;
+&gt; f1b10cd84249: Pull complete
+&gt; fb9cc58bde0c: Pull complete
+&gt; a005304e4e74: Already exists
 &gt; library/centos:6: The image you are pulling has been verified. Important: image verification is a tech preview feature and should not be relied on to provide security.
 &gt;
 &gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
@@ -299,16 +300,16 @@ mvn clean package -Pdist,native -DskipTests -Drequire.snappy -Drequire.openssl -
 &gt; main:
 &gt;      [exec] $ tar cf hadoop-2.7.1.tar hadoop-2.7.1
 &gt;      [exec] $ gzip -f hadoop-2.7.1.tar
-&gt;      [exec] 
+&gt;      [exec]
 &gt;      [exec] Hadoop dist tar available at: /hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2.7.1.tar.gz
-&gt;      [exec] 
+&gt;      [exec]
 &gt; [INFO] Executed tasks
-&gt; [INFO] 
+&gt; [INFO]
 &gt; [INFO] --- maven-javadoc-plugin:2.8.1:jar (module-javadocs) @ hadoop-dist ---
 &gt; [INFO] Building jar: /hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-dist-2.7.1-javadoc.jar
 &gt; [INFO] ------------------------------------------------------------------------
 &gt; [INFO] Reactor Summary:
-&gt; [INFO] 
+&gt; [INFO]
 &gt; [INFO] Apache Hadoop Main ................................. SUCCESS [01:56 min]
 &gt; [INFO] Apache Hadoop Project POM .......................... SUCCESS [ 42.134 s]
 &gt; [INFO] Apache Hadoop Annotations .......................... SUCCESS [ 37.761 s]
