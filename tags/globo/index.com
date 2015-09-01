@@ -8,7 +8,7 @@
   	<meta property="og:title" content=" Globo.Com &middot;  Grandes Dados" />
   	<meta property="og:site_name" content="Grandes Dados" />
   	<meta property="og:url" content="http://grandesdados.com/tags/globo/index.com/" />
-    <meta property="og:image" content="images/placeholder-share.jpg" />
+    <meta property="og:image" content="http://grandesdados.com/images/placeholder-share.jpg" />
 
     
     <meta property="og:type" content="website" />
