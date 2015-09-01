@@ -3,8 +3,13 @@
   
   <url>
     <loc>http://grandesdados.com/</loc>
-    <lastmod>2015-08-27T06:00:00-03:00</lastmod>
+    <lastmod>2015-08-31T22:45:23-03:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker/</loc>
+    <lastmod>2015-08-31T22:45:23-03:00</lastmod>
   </url>
   
   <url>

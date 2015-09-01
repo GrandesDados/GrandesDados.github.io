@@ -7,7 +7,7 @@
 
   	<meta property="og:title" content=" Docker &middot;  Grandes Dados" />
   	<meta property="og:site_name" content="Grandes Dados" />
-  	<meta property="og:url" content="http://localhost:1313/tags/docker/" />
+  	<meta property="og:url" content="http://grandesdados.com/tags/docker/" />
     
     
     <meta property="og:type" content="website" />
@@ -22,24 +22,25 @@
     <meta name="HandheldFriendly" content="True" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="shortcut icon" href="http://localhost:1313/images/favicon.ico">
-	  <link rel="apple-touch-icon" href="http://localhost:1313/images/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="http://grandesdados.com/images/favicon.ico">
+	  <link rel="apple-touch-icon" href="http://grandesdados.com/images/apple-touch-icon.png" />
     
-    <link rel="stylesheet" type="text/css" href="http://localhost:1313/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/nav.css" />
     <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
 
 
     
       
-          <link href="http://localhost:1313/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
+          <link href="http://grandesdados.com/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
       
       
-        <link href="http://localhost:1313/tags/docker/index.xml" rel="alternate" type="application/rss+xml" title="Docker &middot; Grandes Dados" />
+        <link href="http://grandesdados.com/tags/docker/index.xml" rel="alternate" type="application/rss+xml" title="Docker &middot; Grandes Dados" />
       
     
     <meta name="generator" content="Hugo 0.14" />
 
-    <link rel="canonical" href="http://localhost:1313/tags/docker/" />
+    <link rel="canonical" href="http://grandesdados.com/tags/docker/" />
 
     
     <script>
@@ -53,6 +54,11 @@
 
     </script>
     
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/solarized_dark.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
 </head>
 <body class="nav-closed">
 
@@ -64,9 +70,10 @@
     <ul>
         
         
+        
             
             <li class="nav-opened" role="presentation">
-            	<a href="http://localhost:1313/">Blog</a>
+            	<a href="http://grandesdados.com/">Blog</a>
             </li>
         
             
@@ -77,7 +84,7 @@
     </ul>
     
     
-    <a class="subscribe-button icon-feed" href="http://localhost:1313/tags/docker/index.xml">Subscribe</a>
+    <a class="subscribe-button icon-feed" href="http://grandesdados.com/tags/docker/index.xml">Subscribe</a>
     
 </div>
 <span class="nav-cover"></span>
@@ -87,7 +94,8 @@
 
 
 
-	<header class="main-header tag-head" style="background-image: url(http://localhost:1313/images/cover.jpg)">
+
+	<header class="main-header tag-head" style="background-image: url(http://grandesdados.com/images/cover.jpg)">
 
     <nav class="main-nav overlay clearfix">
       
@@ -121,10 +129,10 @@
 	   
 <article class="post post">
     <header class="post-header">
-        <h2 class="post-title"><a href="http://localhost:1313/post/hadoop-local">Compilação e Configuração do Hadoop na Máquina Local</a></h2>
+        <h2 class="post-title"><a href="http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker">Compilação do Hadoop para CentOS6 / RHEL6 usando Docker</a></h2>
     </header>
     <section class="post-excerpt">
-        <p>Para esse procedimento, é assumido que o Docker esteja instalado e funcionando; também é assumido acesso à Internet. (originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto) Compilação Documento com instruções de build do Hadoop aqui. O resultado desse procedimento é um pacote do Hadoop com as bibliotecas nativas compiladas para o CentOS6. &hellip; Instalação do container Docker na Máquina local. (abre a shell dentro do container) $ sudo docker run -i -t centos:6 /bin/bash Criação do usuário e local a serem usados na compilação e e geração do pacote. <a class="read-more" href="http://localhost:1313/post/hadoop-local">&raquo;</a></p>
+        <p>Esse tutorial é sobre a construção do pacote do Hadoop 2.7.1 para o CentOS6 / RHEL6 usando Docker. Esse procedimento é necessário para gerar as bibliotecas nativas compatíveis. A principal objetivo que motivou esse trabalho foi configurar o FairScheduler do YARN usando CGroups rodando no Red Hat Enterprise Linux 6 (RHEL6). O pacote Hadoop distribuído pela Apache tem executável binário que não é compatível com a Glibc que faz parte de CentOS6/RHEL6. <a class="read-more" href="http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker">&raquo;</a></p>
     </section>
     <footer class="post-meta">
         
@@ -134,15 +142,19 @@
         
         on
             
-                <a href="http://localhost:1313/tags/hadoop/">#Hadoop</a>,
+                <a href="http://grandesdados.com/tags/tutorial/">#Tutorial</a>,
             
-                <a href="http://localhost:1313/tags/docker/">#Docker</a>,
+                <a href="http://grandesdados.com/tags/hadoop/">#Hadoop</a>,
             
-                <a href="http://localhost:1313/tags/centos6/">#CentOS6</a>,
+                <a href="http://grandesdados.com/tags/docker/">#Docker</a>,
+            
+                <a href="http://grandesdados.com/tags/centos6/">#CentOS6</a>,
+            
+                <a href="http://grandesdados.com/tags/rhel6/">#RHEL6</a>,
             
         
-        <time class="post-date" datetime="2015-08-27T20:41:23-03:00">
-            27 Aug 2015
+        <time class="post-date" datetime="2015-08-31T22:45:23-03:00">
+            31 Aug 2015
         </time>
     </footer>
 </article>
@@ -166,12 +178,9 @@
         
     </footer>
     </div>
-    <script type="text/javascript" src="http://localhost:1313/js/jquery.js"></script>
-    <script type="text/javascript" src="http://localhost:1313/js/jquery.fitvids.js"></script>
-    <script type="text/javascript" src="http://localhost:1313/js/index.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/index.js"></script>
 
-<script data-no-instant>document.write('<script src="http://'
-        + (location.host || 'localhost').split(':')[0]
-		+ ':1313/livereload.js?mindelay=10"></'
-        + 'script>')</script></body>
+</body>
 </html>
