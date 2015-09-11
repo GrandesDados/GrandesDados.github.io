@@ -7,8 +7,280 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
-    <lastBuildDate>Thu, 27 Aug 2015 06:00:00 -0300</lastBuildDate>
+    <lastBuildDate>Fri, 11 Sep 2015 08:10:00 -0300</lastBuildDate>
     <atom:link href="http://grandesdados.com/tags/spark/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Compilação do Spark 1.5 (com bugfix)</title>
+      <link>http://grandesdados.com/post/compilacao-do-spark-15-com-bugfix/</link>
+      <pubDate>Fri, 11 Sep 2015 08:10:00 -0300</pubDate>
+      
+      <guid>http://grandesdados.com/post/compilacao-do-spark-15-com-bugfix/</guid>
+      <description>
+
+&lt;p&gt;Aproveitando que foi feito o lançamento da versão 1.5.0 do Spark, esse tutorial é sobre a construção do pacote do Spark usando o branch atualizado. O branch foi criado para fazer a estabilização do código que deu origem ao primeiro release. Esse branch continua recebendo atualizações importantes que farão parte de releases bugfix no futuro. Com esse procedimento, é possível gerar o pacote com essas últimas atualizações (e até customizar com alterações próprias) antecipando correções que podem ajudar em produção. Importante entender que ao usar uma versão que não passou pelo release implica em riscos que devem ser mitigados com muitos testes.&lt;/p&gt;
+
+&lt;p&gt;Mais informações sobre a construção do Spark podem ser obtidas na documentação &lt;a href=&#34;http://spark.apache.org/docs/latest/building-spark.html&#34;&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Mais informações sobre a última versão Spark 1.5.0 no &lt;a href=&#34;http://spark.apache.org/releases/spark-release-1-5-0.html&#34;&gt;Release Notes&lt;/a&gt; e no blog da Databricks &lt;a href=&#34;https://databricks.com/blog/2015/09/09/announcing-spark-1-5.html&#34;&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;pré-requisito:a471447a7b0c139f517b6888cdad9c6e&#34;&gt;Pré-requisito&lt;/h2&gt;
+
+&lt;p&gt;O procedimento consiste em: provisionar o ambiente; fazer uma cópia do branch estável da última versão, e; gerar o pacote binário e os artefatos do Maven.&lt;/p&gt;
+
+&lt;p&gt;As ferramentas necessárias para construção são git, Java 7 e Maven 3.3.&lt;/p&gt;
+
+&lt;p&gt;Todo o procedimento é executado na linha de comando do terminal.&lt;/p&gt;
+
+&lt;p&gt;(é assumido que o git já está instalado)&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Java&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A versão usada nesse procedimento é o Java 7 para o qual a Oracle já terminou o ciclo de desenvolvimento das releases públicas (gratuitas). Contudo, essa é a versão que tem melhor suporte nas ferramentas que estaremos usando com Spark.&lt;/p&gt;
+
+&lt;p&gt;(também tem suporte para o Java 8, mas o interesse é usar esse pacote no Hadoop 2.7 que ainda não suporta oficialmente essa versão)&lt;/p&gt;
+
+&lt;p&gt;Segue o procedimento para Linux e MacOSX.&lt;/p&gt;
+
+&lt;p&gt;(Linux)&lt;/p&gt;
+
+&lt;p&gt;No Linux, para o Java, é usado o JDK da Oracle.&lt;/p&gt;
+
+&lt;p&gt;(nesse procedimento, foi usado o ArchLinux atualizado até essa primeira semana de Setembro)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;wget --no-check-certificate --no-cookies --header &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jdk-7u80-linux-x64.tar.gz
+
+tar zxf jdk-7u80-linux-x64.tar.gz
+
+export JAVA_HOME=`pwd`/jdk1.7.0_80
+export PATH=$JAVA_HOME/bin:$PATH
+
+java -version
+
+&amp;gt; java version &amp;#34;1.7.0_80&amp;#34;
+&amp;gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
+&amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;(OSX)&lt;/p&gt;
+
+&lt;p&gt;No MacOSX, é necessário baixar o pacote no site da Oracle e fazer a instalação.&lt;/p&gt;
+
+&lt;p&gt;Download do Java 7 &lt;a href=&#34;http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jdk-7u80-oth-JPR&#34;&gt;aqui&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;No terminal, a versão específica do Java pode ser configurada ajustando a variável de ambiente:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;export JAVA_HOME=&amp;#34;$(/usr/libexec/java_home -v 1.7)&amp;#34;
+
+java -version
+
+&amp;gt; java version &amp;#34;1.7.0_80&amp;#34;
+&amp;gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
+&amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Maven&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;A construção do Spark depende da versão 3.3 do Maven.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;wget http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+
+tar zxf apache-maven-3.3.3-bin.tar.gz
+
+export PATH=`pwd`/apache-maven-3.3.3/bin
+
+mvn -version
+
+&amp;gt; Apache Maven 3.3.3 (7994120775791599e205a5524ec3e0dfe41d4a06; 2015-04-22T08:57:37-03:00)
+&amp;gt; Maven home: /home/cavani/Software/apache-maven-3.3.3
+&amp;gt; Java version: 1.7.0_80, vendor: Oracle Corporation
+&amp;gt; Java home: /home/cavani/Software/jdk1.7.0_80/jre
+&amp;gt; Default locale: en_US, platform encoding: UTF-8
+&amp;gt; OS name: &amp;#34;linux&amp;#34;, version: &amp;#34;4.0.4-2-arch&amp;#34;, arch: &amp;#34;amd64&amp;#34;, family: &amp;#34;unix&amp;#34;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h2 id=&#34;compilação:a471447a7b0c139f517b6888cdad9c6e&#34;&gt;Compilação&lt;/h2&gt;
+
+&lt;p&gt;Primeiramente é criado um clone local do repositório do Spark no qual é desenvolvido a versão 1.5 (estável).&lt;/p&gt;
+
+&lt;p&gt;(use &lt;code&gt;--depth 1&lt;/code&gt; para baixar apenas os arquivos finais, sem o histórico de mudanças, diminui o download)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;git clone https://github.com/apache/spark.git --branch branch-1.5 spark-1.5
+
+&amp;gt; Cloning into &amp;#39;spark-1.5&amp;#39;...
+&amp;gt; remote: Counting objects: 256928, done.
+&amp;gt; remote: Total 256928 (delta 0), reused 0 (delta 0), pack-reused 256928
+&amp;gt; Receiving objects: 100% (256928/256928), 121.38 MiB | 1.23 MiB/s, done.
+&amp;gt; Resolving deltas: 100% (108225/108225), done.
+&amp;gt; Checking connectivity... done.
+
+cd spark-1.5&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;A partir desse branch serão criados todos os releases 1.5.x.&lt;/p&gt;
+
+&lt;p&gt;Já foi feito o release da tag v1.5.0 e está aberto o desenvolvimento da versão 1.5.1 (ou seja, a versão corrente no branch é a 1.5.1-SNAPSHOT).&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;git log --oneline -30
+
+&amp;gt; 89d351b Revert &amp;#34;[SPARK-6350] [MESOS] Fine-grained mode scheduler respects mesosExecutor.cores&amp;#34;
+&amp;gt; (...)
+&amp;gt; 2b270a1 Preparing development version 1.5.1-SNAPSHOT
+&amp;gt; 908e37b Preparing Spark release v1.5.0-rc3
+&amp;gt; 1c752b8 [SPARK-10341] [SQL] fix memory starving in unsafe SMJ&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;O versionamento será com base na versão do último release e a identificação dos bugfix será feita no nome do pacote, preservado a substituição transparente da versão oficial pela atualizada.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;mvn help:evaluate -Dexpression=project.version | grep -v INFO | grep -v WARNING | grep -v Download
+
+&amp;gt; 1.5.1-SNAPSHOT
+
+mvn versions:set -DnewVersion=1.5.0 -DgenerateBackupPoms=false
+
+&amp;gt; (...)
+&amp;gt; [INFO] Reactor Summary:
+&amp;gt; [INFO] 
+&amp;gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  4.559 s]
+&amp;gt; (...)
+&amp;gt; [INFO] BUILD SUCCESS
+&amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Por fim, a construção do pacote.&lt;/p&gt;
+
+&lt;p&gt;Nesse caso estaremos construindo um pacote com suporte ao YARN no Hadoop 2.7.1, suporte Hive com JDBC.&lt;/p&gt;
+
+&lt;p&gt;Estamos colocando no nome do pacote o número do último commit.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;export MAVEN_OPTS=&amp;#34;-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m&amp;#34;
+
+./make-distribution.sh --name 89d351b --tgz --skip-java-test -Phadoop-2.6 -Pyarn -Phive -Phive-thriftserver -Dhadoop.version=2.7.1
+
+&amp;gt; (...)
+&amp;gt; [INFO] Reactor Summary:
+&amp;gt; [INFO] 
+&amp;gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  3.841 s]
+&amp;gt; [INFO] Spark Project Launcher ............................. SUCCESS [ 12.819 s]
+&amp;gt; [INFO] Spark Project Networking ........................... SUCCESS [ 10.980 s]
+&amp;gt; [INFO] Spark Project Shuffle Streaming Service ............ SUCCESS [  6.876 s]
+&amp;gt; [INFO] Spark Project Unsafe ............................... SUCCESS [ 15.828 s]
+&amp;gt; [INFO] Spark Project Core ................................. SUCCESS [03:19 min]
+&amp;gt; [INFO] Spark Project Bagel ................................ SUCCESS [  7.048 s]
+&amp;gt; [INFO] Spark Project GraphX ............................... SUCCESS [ 18.493 s]
+&amp;gt; [INFO] Spark Project Streaming ............................ SUCCESS [ 41.120 s]
+&amp;gt; [INFO] Spark Project Catalyst ............................. SUCCESS [01:01 min]
+&amp;gt; [INFO] Spark Project SQL .................................. SUCCESS [01:22 min]
+&amp;gt; [INFO] Spark Project ML Library ........................... SUCCESS [01:13 min]
+&amp;gt; [INFO] Spark Project Tools ................................ SUCCESS [  2.460 s]
+&amp;gt; [INFO] Spark Project Hive ................................. SUCCESS [ 58.477 s]
+&amp;gt; [INFO] Spark Project REPL ................................. SUCCESS [ 11.646 s]
+&amp;gt; [INFO] Spark Project YARN ................................. SUCCESS [ 14.443 s]
+&amp;gt; [INFO] Spark Project Hive Thrift Server ................... SUCCESS [ 11.609 s]
+&amp;gt; [INFO] Spark Project Assembly ............................. SUCCESS [02:02 min]
+&amp;gt; [INFO] Spark Project External Twitter ..................... SUCCESS [  8.653 s]
+&amp;gt; [INFO] Spark Project External Flume Sink .................. SUCCESS [  5.997 s]
+&amp;gt; [INFO] Spark Project External Flume ....................... SUCCESS [ 12.408 s]
+&amp;gt; [INFO] Spark Project External Flume Assembly .............. SUCCESS [  3.959 s]
+&amp;gt; [INFO] Spark Project External MQTT ........................ SUCCESS [ 22.884 s]
+&amp;gt; [INFO] Spark Project External MQTT Assembly ............... SUCCESS [  8.830 s]
+&amp;gt; [INFO] Spark Project External ZeroMQ ...................... SUCCESS [  8.407 s]
+&amp;gt; [INFO] Spark Project External Kafka ....................... SUCCESS [ 14.933 s]
+&amp;gt; [INFO] Spark Project Examples ............................. SUCCESS [01:52 min]
+&amp;gt; [INFO] Spark Project External Kafka Assembly .............. SUCCESS [  7.171 s]
+&amp;gt; [INFO] Spark Project YARN Shuffle Service ................. SUCCESS [  7.010 s]
+&amp;gt; [INFO] ------------------------------------------------------------------------
+&amp;gt; [INFO] BUILD SUCCESS
+&amp;gt; [INFO] ------------------------------------------------------------------------
+&amp;gt; [INFO] Total time: 16:08 min
+&amp;gt; [INFO] Finished at: 2015-09-11T06:44:55-03:00
+&amp;gt; [INFO] Final Memory: 417M/1553M
+&amp;gt; [INFO] ------------------------------------------------------------------------
+&amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Resultado:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;spark-1.5.0-bin-89d351b.tgz&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;(Artefatos do Maven)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;rm -rf ~/.m2/repository/org/apache/spark
+
+mvn install -Phadoop-2.6 -Pyarn -Phive -Phive-thriftserver -Dhadoop.version=2.7.1 -DskipTests
+
+&amp;gt; (...)
+&amp;gt; [INFO] Reactor Summary:
+&amp;gt; [INFO] 
+&amp;gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  4.339 s]
+&amp;gt; [INFO] Spark Project Launcher ............................. SUCCESS [ 14.078 s]
+&amp;gt; [INFO] Spark Project Networking ........................... SUCCESS [  8.555 s]
+&amp;gt; [INFO] Spark Project Shuffle Streaming Service ............ SUCCESS [  3.540 s]
+&amp;gt; [INFO] Spark Project Unsafe ............................... SUCCESS [  3.395 s]
+&amp;gt; [INFO] Spark Project Core ................................. SUCCESS [01:22 min]
+&amp;gt; [INFO] Spark Project Bagel ................................ SUCCESS [  7.293 s]
+&amp;gt; [INFO] Spark Project GraphX ............................... SUCCESS [ 15.367 s]
+&amp;gt; [INFO] Spark Project Streaming ............................ SUCCESS [ 26.005 s]
+&amp;gt; [INFO] Spark Project Catalyst ............................. SUCCESS [ 49.232 s]
+&amp;gt; [INFO] Spark Project SQL .................................. SUCCESS [ 48.866 s]
+&amp;gt; [INFO] Spark Project ML Library ........................... SUCCESS [01:01 min]
+&amp;gt; [INFO] Spark Project Tools ................................ SUCCESS [  8.979 s]
+&amp;gt; [INFO] Spark Project Hive ................................. SUCCESS [ 29.601 s]
+&amp;gt; [INFO] Spark Project REPL ................................. SUCCESS [ 19.661 s]
+&amp;gt; [INFO] Spark Project YARN ................................. SUCCESS [ 16.976 s]
+&amp;gt; [INFO] Spark Project Hive Thrift Server ................... SUCCESS [ 13.583 s]
+&amp;gt; [INFO] Spark Project Assembly ............................. SUCCESS [02:01 min]
+&amp;gt; [INFO] Spark Project External Twitter ..................... SUCCESS [  9.734 s]
+&amp;gt; [INFO] Spark Project External Flume Sink .................. SUCCESS [ 10.291 s]
+&amp;gt; [INFO] Spark Project External Flume ....................... SUCCESS [ 12.282 s]
+&amp;gt; [INFO] Spark Project External Flume Assembly .............. SUCCESS [  4.252 s]
+&amp;gt; [INFO] Spark Project External MQTT ........................ SUCCESS [ 21.910 s]
+&amp;gt; [INFO] Spark Project External MQTT Assembly ............... SUCCESS [  8.383 s]
+&amp;gt; [INFO] Spark Project External ZeroMQ ...................... SUCCESS [  7.677 s]
+&amp;gt; [INFO] Spark Project External Kafka ....................... SUCCESS [ 13.317 s]
+&amp;gt; [INFO] Spark Project Examples ............................. SUCCESS [01:45 min]
+&amp;gt; [INFO] Spark Project External Kafka Assembly .............. SUCCESS [  6.813 s]
+&amp;gt; [INFO] Spark Project YARN Shuffle Service ................. SUCCESS [  7.544 s]
+&amp;gt; [INFO] ------------------------------------------------------------------------
+&amp;gt; [INFO] BUILD SUCCESS
+&amp;gt; [INFO] ------------------------------------------------------------------------
+&amp;gt; [INFO] Total time: 12:24 min
+&amp;gt; [INFO] Finished at: 2015-09-11T07:52:35-03:00
+&amp;gt; [INFO] Final Memory: 102M/1349M
+&amp;gt; [INFO] ------------------------------------------------------------------------
+
+cd ~/.m2/repository
+tar cf spark-1.5.0-m2-89d351b.tar org/apache/spark
+
+cd -
+mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Resultado:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;spark-1.5.0-m2-89d351b.tar&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusão:a471447a7b0c139f517b6888cdad9c6e&#34;&gt;Conclusão&lt;/h2&gt;
+
+&lt;p&gt;O Spark é um framework que vem evoluindo rapidamente, com contribuições das mais diversas origem. Praticamente todos os grandes de BigData estão contribuindo com o Spark. Muitas vezes, surgem novas funcionalidades que podem agregar muito valor nas suas aplicações. Outras vezes, são bugs corrigidos que contribuem para a estabilidade de uma aplicação que já existe. Também tem o &amp;lsquo;prazer&amp;rsquo; de ser um &amp;lsquo;early adopter&amp;rsquo;. Seja qual for o motivo, esse procedimento mostra que o trabalho para ter um pacote do Spark é bem fácil e, por experiência, esse é um fator bastante relevante para ganhar tempo e gerar máximo valor.&lt;/p&gt;
+
+&lt;p&gt;Nos próximos artigos, vou falar mais de como usar o Spark para desenvolver um aplicação que roda no Hadoop.&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Você trabalha com Spark ou tem experiência com as tecnologias envolvidas? Venha trabalhar conosco.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://talentos.globo.com/&#34;&gt;http://talentos.globo.com/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>BigData na Globo.com</title>
@@ -67,7 +339,8 @@
 
 &lt;h3 id=&#34;hadoop:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Hadoop&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hadoop-logo.jpg&#34; alt=&#34;Hadoop logo&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hadoop-logo.jpg&#34; alt=&#34;Hadoop logo&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;O Hadoop torna o custo por byte de armazenamento / processamento marginal e por isso torna BigData possível na escala de hoje. O problema que o Hadoop resolve é de otimizar a utilização de múltiplas máquinas por vários processos.&lt;/p&gt;
 
@@ -120,7 +393,8 @@
 
 &lt;h3 id=&#34;hbase:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;HBase&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hbase-logo.png&#34; alt=&#34;HBase logo&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hbase-logo.png&#34; alt=&#34;HBase logo&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;O HBase é um banco de dados sem esquema que suporta bilhões de linhas por tabela. Inspirado no paper BigTable do Google, suporta uma estrutura chave-valor ordenada, multidimensional, esparsa, distribuída e persistente. O principal benefício é o suporte para operação eficiente com pequenos blocos de bytes em complemento ao HDFS que opera melhor com grandes blocos.&lt;/p&gt;
 
@@ -167,7 +441,8 @@
 
 &lt;h3 id=&#34;kafka:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Kafka&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/kafka-logo.png&#34; alt=&#34;Kafka logo&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/kafka-logo.png&#34; alt=&#34;Kafka logo&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;O Kafka é um cluster de distribuição de mensagens que escala para um grande número de produtores e consumidores. Criado pelo LinkedIn, o Kafka tornou-se a tecnologia fundamental para uma arquitetura de dados stream. Com o Kafka, é possível concentrar e distribuir um fluxo muito grande de dados que podem ser acessados tanto para processamento em tempo real quanto para processamento em lote. O principal benefício é o acesso direto ao dado quase no mesmo instante em que ele é gerado.&lt;/p&gt;
 
@@ -207,7 +482,8 @@ httpd://spark.apache.org/streaming/&lt;/p&gt;
 
 &lt;h3 id=&#34;spark:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Spark&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/spark-logo.png&#34; alt=&#34;Spark logo&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/spark-logo.png&#34; alt=&#34;Spark logo&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;O Spark é um framework para processamento distribuído de grande quantidade de dados com foco em análise interativa. O Spark tem uma API simples que torna fácil escrever desde pequenas manipulações de dados, até algoritmos iterativos complexos, de forma escalável e com boas práticas de engenharia de software (testes). Essa característica o torna a ferramenta ideal de trabalho tanto para o Data Engineer que tem que desenvolver uma solução de dados, quanto para o Data Scientist que tem que desenvolver modelos e visualizações. Dessa forma, o Spark hoje é composto por um conjunto grande de funcionalidades com suporte DataFrame / SQL, Machine Learning, Streaming e Processamento de Grafos. Também é o projeto mais popular na área de BigData e cada nova versão adiciona ainda mais abrangência e inovação.&lt;/p&gt;
 
@@ -320,7 +596,8 @@ Linha 2: outro RDD é criado e filtra linhas que contenham a palavra &amp;ldquo;
 Linha 3: para cada linha com a palavra &amp;ldquo;ERROR&amp;rdquo;, uma operação de map associa ao valor 1 em outro RDD;
 Linha 4: Uma operação de reduce, soma todos os valores e retorna para o programa driver.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg&#34; alt=&#34;Encadeamento de dependências dos RDDs&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg&#34; alt=&#34;Encadeamento de dependências dos RDDs&#34; /&gt;
+&lt;/p&gt;
 
 &lt;h2 id=&#34;rdd-versus-memória-compartilhada:aeed7472b10a84461abb6a3dcf5257fc&#34;&gt;RDD versus Memória Compartilhada&lt;/h2&gt;
 
@@ -337,7 +614,8 @@ Linha 4: Uma operação de reduce, soma todos os valores e retorna para o progra
 &lt;p&gt;O Spark foi construído a partir do sistema Mesos, uma espécie de sistema operacional de cluster, que cria uma abstração para que aplicações Spark possam usufruir de um cluster Hadoop. O Spark é escrito em Scala e os usuários podem escrever seu código em Scala, Java ou Python.&lt;/p&gt;
 
 &lt;p&gt;Uma aplicação Spark é composta de apenas um código principal, chamado de driver, que se conecta aos workers do cluster. O driver define um ou mais RDDs e realiza operações sobre eles.
-&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png&#34; alt=&#34;Arquitetura de tarefas Spark&#34; /&gt;&lt;/p&gt;
+&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png&#34; alt=&#34;Arquitetura de tarefas Spark&#34; /&gt;
+&lt;/p&gt;
 
 &lt;p&gt;As operações sobre os RDDs podem ser de dois tipos:&lt;/p&gt;
 

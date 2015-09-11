@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  	<meta property="og:title" content=" Compilação do Spark 1.5 (com bugfix) &middot;  Grandes Dados" />
+  	<meta property="og:site_name" content="Grandes Dados" />
+  	<meta property="og:url" content="http://grandesdados.com/post/compilacao-do-spark-15-com-bugfix/" />
+    <meta property="og:image" content="http://grandesdados.com/images/placeholder-share.jpg" />
+
+    
+  	<meta property="og:type" content="article" />
+
+    <meta property="og:article:published_time" content="2015-09-11T08:10:00-03:00" />
+
+    
+    <meta property="og:article:tag" content="Tutorial" />
+    
+    <meta property="og:article:tag" content="Spark" />
+    
+    
+
+  <title>
+     Compilação do Spark 1.5 (com bugfix) &middot;  Grandes Dados
+  </title>
+
+    <meta name="description" content="Blog de BigData" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="http://grandesdados.com/images/favicon.ico">
+	  <link rel="apple-touch-icon" href="http://grandesdados.com/images/apple-touch-icon.png" />
+
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/nav.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
+
+
+    
+      
+          <link href="http://grandesdados.com/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
+      
+      
+    
+    <meta name="generator" content="Hugo 0.14" />
+
+    <link rel="canonical" href="http://grandesdados.com/post/compilacao-do-spark-15-com-bugfix/" />
+
+    
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-38960920-6', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/solarized_dark.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+<body class="nav-closed">
+
+  <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        
+        
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="http://grandesdados.com/">Blog</a>
+            </li>
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="https://github.com/GrandesDados">GitHub</a>
+            </li>
+        
+    </ul>
+    
+    
+    <a class="subscribe-button icon-feed" href="http://grandesdados.com/index.xml">Subscribe</a>
+    
+</div>
+<span class="nav-cover"></span>
+
+
+ <div class="site-wrapper">
+
+
+
+
+<header class="main-header post-head no-cover">
+  <nav class="main-nav clearfix">
+
+
+  
+  
+      <a class="menu-button" href="#"><span class="burger">&#9776;</span><span class="word">Menu</span></a>
+  
+  </nav>
+</header>
+
+
+
+<main class="content" role="main">
+
+
+
+
+  <article class="post post">
+
+    <header class="post-header">
+        <h1 class="post-title">Compilação do Spark 1.5 (com bugfix)</h1>
+        <small></small>
+
+        <section class="post-meta">
+        
+          <time class="post-date" datetime="2015-09-11T08:10:00-03:00">
+            Sep 11, 2015
+          </time>
+        
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/tutorial/">#Tutorial</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/spark/">#Spark</a></span>
+         
+        </section>
+    </header>
+  
+    <section class="post-content">
+      
+
+<p>Aproveitando que foi feito o lançamento da versão 1.5.0 do Spark, esse tutorial é sobre a construção do pacote do Spark usando o branch atualizado. O branch foi criado para fazer a estabilização do código que deu origem ao primeiro release. Esse branch continua recebendo atualizações importantes que farão parte de releases bugfix no futuro. Com esse procedimento, é possível gerar o pacote com essas últimas atualizações (e até customizar com alterações próprias) antecipando correções que podem ajudar em produção. Importante entender que ao usar uma versão que não passou pelo release implica em riscos que devem ser mitigados com muitos testes.</p>
+
+<p>Mais informações sobre a construção do Spark podem ser obtidas na documentação <a href="http://spark.apache.org/docs/latest/building-spark.html">aqui</a>.</p>
+
+<p>Mais informações sobre a última versão Spark 1.5.0 no <a href="http://spark.apache.org/releases/spark-release-1-5-0.html">Release Notes</a> e no blog da Databricks <a href="https://databricks.com/blog/2015/09/09/announcing-spark-1-5.html">aqui</a>.</p>
+
+<h2 id="pré-requisito:a471447a7b0c139f517b6888cdad9c6e">Pré-requisito</h2>
+
+<p>O procedimento consiste em: provisionar o ambiente; fazer uma cópia do branch estável da última versão, e; gerar o pacote binário e os artefatos do Maven.</p>
+
+<p>As ferramentas necessárias para construção são git, Java 7 e Maven 3.3.</p>
+
+<p>Todo o procedimento é executado na linha de comando do terminal.</p>
+
+<p>(é assumido que o git já está instalado)</p>
+
+<p><strong>Java</strong></p>
+
+<p>A versão usada nesse procedimento é o Java 7 para o qual a Oracle já terminou o ciclo de desenvolvimento das releases públicas (gratuitas). Contudo, essa é a versão que tem melhor suporte nas ferramentas que estaremos usando com Spark.</p>
+
+<p>(também tem suporte para o Java 8, mas o interesse é usar esse pacote no Hadoop 2.7 que ainda não suporta oficialmente essa versão)</p>
+
+<p>Segue o procedimento para Linux e MacOSX.</p>
+
+<p>(Linux)</p>
+
+<p>No Linux, para o Java, é usado o JDK da Oracle.</p>
+
+<p>(nesse procedimento, foi usado o ArchLinux atualizado até essa primeira semana de Setembro)</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">wget --no-check-certificate --no-cookies --header &#34;Cookie: oraclelicense=accept-securebackup-cookie&#34; http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jdk-7u80-linux-x64.tar.gz
+
+tar zxf jdk-7u80-linux-x64.tar.gz
+
+export JAVA_HOME=`pwd`/jdk1.7.0_80
+export PATH=$JAVA_HOME/bin:$PATH
+
+java -version
+
+&gt; java version &#34;1.7.0_80&#34;
+&gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
+&gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)</code></pre>
+</p>
+
+<p>(OSX)</p>
+
+<p>No MacOSX, é necessário baixar o pacote no site da Oracle e fazer a instalação.</p>
+
+<p>Download do Java 7 <a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html#jdk-7u80-oth-JPR">aqui</a>.</p>
+
+<p>No terminal, a versão específica do Java pode ser configurada ajustando a variável de ambiente:</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">export JAVA_HOME=&#34;$(/usr/libexec/java_home -v 1.7)&#34;
+
+java -version
+
+&gt; java version &#34;1.7.0_80&#34;
+&gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
+&gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)</code></pre>
+</p>
+
+<p><strong>Maven</strong></p>
+
+<p>A construção do Spark depende da versão 3.3 do Maven.</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">wget http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
+
+tar zxf apache-maven-3.3.3-bin.tar.gz
+
+export PATH=`pwd`/apache-maven-3.3.3/bin
+
+mvn -version
+
+&gt; Apache Maven 3.3.3 (7994120775791599e205a5524ec3e0dfe41d4a06; 2015-04-22T08:57:37-03:00)
+&gt; Maven home: /home/cavani/Software/apache-maven-3.3.3
+&gt; Java version: 1.7.0_80, vendor: Oracle Corporation
+&gt; Java home: /home/cavani/Software/jdk1.7.0_80/jre
+&gt; Default locale: en_US, platform encoding: UTF-8
+&gt; OS name: &#34;linux&#34;, version: &#34;4.0.4-2-arch&#34;, arch: &#34;amd64&#34;, family: &#34;unix&#34;</code></pre>
+</p>
+
+<h2 id="compilação:a471447a7b0c139f517b6888cdad9c6e">Compilação</h2>
+
+<p>Primeiramente é criado um clone local do repositório do Spark no qual é desenvolvido a versão 1.5 (estável).</p>
+
+<p>(use <code>--depth 1</code> para baixar apenas os arquivos finais, sem o histórico de mudanças, diminui o download)</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">git clone https://github.com/apache/spark.git --branch branch-1.5 spark-1.5
+
+&gt; Cloning into &#39;spark-1.5&#39;...
+&gt; remote: Counting objects: 256928, done.
+&gt; remote: Total 256928 (delta 0), reused 0 (delta 0), pack-reused 256928
+&gt; Receiving objects: 100% (256928/256928), 121.38 MiB | 1.23 MiB/s, done.
+&gt; Resolving deltas: 100% (108225/108225), done.
+&gt; Checking connectivity... done.
+
+cd spark-1.5</code></pre>
+</p>
+
+<p>A partir desse branch serão criados todos os releases 1.5.x.</p>
+
+<p>Já foi feito o release da tag v1.5.0 e está aberto o desenvolvimento da versão 1.5.1 (ou seja, a versão corrente no branch é a 1.5.1-SNAPSHOT).</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">git log --oneline -30
+
+&gt; 89d351b Revert &#34;[SPARK-6350] [MESOS] Fine-grained mode scheduler respects mesosExecutor.cores&#34;
+&gt; (...)
+&gt; 2b270a1 Preparing development version 1.5.1-SNAPSHOT
+&gt; 908e37b Preparing Spark release v1.5.0-rc3
+&gt; 1c752b8 [SPARK-10341] [SQL] fix memory starving in unsafe SMJ</code></pre>
+</p>
+
+<p>O versionamento será com base na versão do último release e a identificação dos bugfix será feita no nome do pacote, preservado a substituição transparente da versão oficial pela atualizada.</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">mvn help:evaluate -Dexpression=project.version | grep -v INFO | grep -v WARNING | grep -v Download
+
+&gt; 1.5.1-SNAPSHOT
+
+mvn versions:set -DnewVersion=1.5.0 -DgenerateBackupPoms=false
+
+&gt; (...)
+&gt; [INFO] Reactor Summary:
+&gt; [INFO] 
+&gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  4.559 s]
+&gt; (...)
+&gt; [INFO] BUILD SUCCESS
+&gt; (...)</code></pre>
+</p>
+
+<p>Por fim, a construção do pacote.</p>
+
+<p>Nesse caso estaremos construindo um pacote com suporte ao YARN no Hadoop 2.7.1, suporte Hive com JDBC.</p>
+
+<p>Estamos colocando no nome do pacote o número do último commit.</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">export MAVEN_OPTS=&#34;-Xmx2g -XX:MaxPermSize=512M -XX:ReservedCodeCacheSize=512m&#34;
+
+./make-distribution.sh --name 89d351b --tgz --skip-java-test -Phadoop-2.6 -Pyarn -Phive -Phive-thriftserver -Dhadoop.version=2.7.1
+
+&gt; (...)
+&gt; [INFO] Reactor Summary:
+&gt; [INFO] 
+&gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  3.841 s]
+&gt; [INFO] Spark Project Launcher ............................. SUCCESS [ 12.819 s]
+&gt; [INFO] Spark Project Networking ........................... SUCCESS [ 10.980 s]
+&gt; [INFO] Spark Project Shuffle Streaming Service ............ SUCCESS [  6.876 s]
+&gt; [INFO] Spark Project Unsafe ............................... SUCCESS [ 15.828 s]
+&gt; [INFO] Spark Project Core ................................. SUCCESS [03:19 min]
+&gt; [INFO] Spark Project Bagel ................................ SUCCESS [  7.048 s]
+&gt; [INFO] Spark Project GraphX ............................... SUCCESS [ 18.493 s]
+&gt; [INFO] Spark Project Streaming ............................ SUCCESS [ 41.120 s]
+&gt; [INFO] Spark Project Catalyst ............................. SUCCESS [01:01 min]
+&gt; [INFO] Spark Project SQL .................................. SUCCESS [01:22 min]
+&gt; [INFO] Spark Project ML Library ........................... SUCCESS [01:13 min]
+&gt; [INFO] Spark Project Tools ................................ SUCCESS [  2.460 s]
+&gt; [INFO] Spark Project Hive ................................. SUCCESS [ 58.477 s]
+&gt; [INFO] Spark Project REPL ................................. SUCCESS [ 11.646 s]
+&gt; [INFO] Spark Project YARN ................................. SUCCESS [ 14.443 s]
+&gt; [INFO] Spark Project Hive Thrift Server ................... SUCCESS [ 11.609 s]
+&gt; [INFO] Spark Project Assembly ............................. SUCCESS [02:02 min]
+&gt; [INFO] Spark Project External Twitter ..................... SUCCESS [  8.653 s]
+&gt; [INFO] Spark Project External Flume Sink .................. SUCCESS [  5.997 s]
+&gt; [INFO] Spark Project External Flume ....................... SUCCESS [ 12.408 s]
+&gt; [INFO] Spark Project External Flume Assembly .............. SUCCESS [  3.959 s]
+&gt; [INFO] Spark Project External MQTT ........................ SUCCESS [ 22.884 s]
+&gt; [INFO] Spark Project External MQTT Assembly ............... SUCCESS [  8.830 s]
+&gt; [INFO] Spark Project External ZeroMQ ...................... SUCCESS [  8.407 s]
+&gt; [INFO] Spark Project External Kafka ....................... SUCCESS [ 14.933 s]
+&gt; [INFO] Spark Project Examples ............................. SUCCESS [01:52 min]
+&gt; [INFO] Spark Project External Kafka Assembly .............. SUCCESS [  7.171 s]
+&gt; [INFO] Spark Project YARN Shuffle Service ................. SUCCESS [  7.010 s]
+&gt; [INFO] ------------------------------------------------------------------------
+&gt; [INFO] BUILD SUCCESS
+&gt; [INFO] ------------------------------------------------------------------------
+&gt; [INFO] Total time: 16:08 min
+&gt; [INFO] Finished at: 2015-09-11T06:44:55-03:00
+&gt; [INFO] Final Memory: 417M/1553M
+&gt; [INFO] ------------------------------------------------------------------------
+&gt; (...)</code></pre>
+</p>
+
+<p>Resultado:</p>
+
+<p><code>spark-1.5.0-bin-89d351b.tgz</code></p>
+
+<p>(Artefatos do Maven)</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">rm -rf ~/.m2/repository/org/apache/spark
+
+mvn install -Phadoop-2.6 -Pyarn -Phive -Phive-thriftserver -Dhadoop.version=2.7.1 -DskipTests
+
+&gt; (...)
+&gt; [INFO] Reactor Summary:
+&gt; [INFO] 
+&gt; [INFO] Spark Project Parent POM ........................... SUCCESS [  4.339 s]
+&gt; [INFO] Spark Project Launcher ............................. SUCCESS [ 14.078 s]
+&gt; [INFO] Spark Project Networking ........................... SUCCESS [  8.555 s]
+&gt; [INFO] Spark Project Shuffle Streaming Service ............ SUCCESS [  3.540 s]
+&gt; [INFO] Spark Project Unsafe ............................... SUCCESS [  3.395 s]
+&gt; [INFO] Spark Project Core ................................. SUCCESS [01:22 min]
+&gt; [INFO] Spark Project Bagel ................................ SUCCESS [  7.293 s]
+&gt; [INFO] Spark Project GraphX ............................... SUCCESS [ 15.367 s]
+&gt; [INFO] Spark Project Streaming ............................ SUCCESS [ 26.005 s]
+&gt; [INFO] Spark Project Catalyst ............................. SUCCESS [ 49.232 s]
+&gt; [INFO] Spark Project SQL .................................. SUCCESS [ 48.866 s]
+&gt; [INFO] Spark Project ML Library ........................... SUCCESS [01:01 min]
+&gt; [INFO] Spark Project Tools ................................ SUCCESS [  8.979 s]
+&gt; [INFO] Spark Project Hive ................................. SUCCESS [ 29.601 s]
+&gt; [INFO] Spark Project REPL ................................. SUCCESS [ 19.661 s]
+&gt; [INFO] Spark Project YARN ................................. SUCCESS [ 16.976 s]
+&gt; [INFO] Spark Project Hive Thrift Server ................... SUCCESS [ 13.583 s]
+&gt; [INFO] Spark Project Assembly ............................. SUCCESS [02:01 min]
+&gt; [INFO] Spark Project External Twitter ..................... SUCCESS [  9.734 s]
+&gt; [INFO] Spark Project External Flume Sink .................. SUCCESS [ 10.291 s]
+&gt; [INFO] Spark Project External Flume ....................... SUCCESS [ 12.282 s]
+&gt; [INFO] Spark Project External Flume Assembly .............. SUCCESS [  4.252 s]
+&gt; [INFO] Spark Project External MQTT ........................ SUCCESS [ 21.910 s]
+&gt; [INFO] Spark Project External MQTT Assembly ............... SUCCESS [  8.383 s]
+&gt; [INFO] Spark Project External ZeroMQ ...................... SUCCESS [  7.677 s]
+&gt; [INFO] Spark Project External Kafka ....................... SUCCESS [ 13.317 s]
+&gt; [INFO] Spark Project Examples ............................. SUCCESS [01:45 min]
+&gt; [INFO] Spark Project External Kafka Assembly .............. SUCCESS [  6.813 s]
+&gt; [INFO] Spark Project YARN Shuffle Service ................. SUCCESS [  7.544 s]
+&gt; [INFO] ------------------------------------------------------------------------
+&gt; [INFO] BUILD SUCCESS
+&gt; [INFO] ------------------------------------------------------------------------
+&gt; [INFO] Total time: 12:24 min
+&gt; [INFO] Finished at: 2015-09-11T07:52:35-03:00
+&gt; [INFO] Final Memory: 102M/1349M
+&gt; [INFO] ------------------------------------------------------------------------
+
+cd ~/.m2/repository
+tar cf spark-1.5.0-m2-89d351b.tar org/apache/spark
+
+cd -
+mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .</code></pre>
+</p>
+
+<p>Resultado:</p>
+
+<p><code>spark-1.5.0-m2-89d351b.tar</code></p>
+
+<h2 id="conclusão:a471447a7b0c139f517b6888cdad9c6e">Conclusão</h2>
+
+<p>O Spark é um framework que vem evoluindo rapidamente, com contribuições das mais diversas origem. Praticamente todos os grandes de BigData estão contribuindo com o Spark. Muitas vezes, surgem novas funcionalidades que podem agregar muito valor nas suas aplicações. Outras vezes, são bugs corrigidos que contribuem para a estabilidade de uma aplicação que já existe. Também tem o &lsquo;prazer&rsquo; de ser um &lsquo;early adopter&rsquo;. Seja qual for o motivo, esse procedimento mostra que o trabalho para ter um pacote do Spark é bem fácil e, por experiência, esse é um fator bastante relevante para ganhar tempo e gerar máximo valor.</p>
+
+<p>Nos próximos artigos, vou falar mais de como usar o Spark para desenvolver um aplicação que roda no Hadoop.</p>
+
+<p>&hellip;</p>
+
+<p>Você trabalha com Spark ou tem experiência com as tecnologias envolvidas? Venha trabalhar conosco.</p>
+
+<p><a href="http://talentos.globo.com/">http://talentos.globo.com/</a></p>
+
+    </section>
+
+
+  <footer class="post-footer">
+
+
+    
+
+    
+
+
+
+
+
+<section class="author">
+  <h4><a href="http://grandesdados.com/">Ciro Cavani</a></h4>
+  
+  <p>Sou formado em Engenharia de Computação pelo Instituto Tecnológico de Aeronáutica (ITA) e faço mestrado em Inteligência Artificial na Pontifícia Universidade Católica do Rio de Janeiro (PUC-Rio). Trabalho na Globo.com no time de Personalização que é responsável pelo desenvolvimento da Plataforma de BigData usada em Produtos de Dados, como o Sistema de Recomendação. Tenho experiência no desenvolvimento de plataformas para coleta, armazenamento e análise de grande volume de dados com objetivo de agregar valor ao negócio da empresa.</p>
+  
+  <div class="author-meta">
+    <span class="author-location icon-location">Rio de Janeiro, RJ</span>
+    <span class="author-link icon-link"><a href="https://www.linkedin.com/in/cirocavani">https://www.linkedin.com/in/cirocavani</a></span>
+  </div>
+</section>
+
+
+
+    
+    <section class="share">
+      <h4>Share this post</h4>
+      <a class="icon-twitter" style="font-size: 1.4em" href="https://twitter.com/share?text=Compila%c3%a7%c3%a3o%20do%20Spark%201.5%20%28com%20bugfix%29&amp;url=http%3a%2f%2fgrandesdados.com%2fpost%2fcompilacao-do-spark-15-com-bugfix%2f"
+          onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <span class="hidden">Twitter</span>
+      </a>
+      <a class="icon-facebook" style="font-size: 1.4em" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fgrandesdados.com%2fpost%2fcompilacao-do-spark-15-com-bugfix%2f"
+          onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <span class="hidden">Facebook</span>
+      </a>
+      <a class="icon-google-plus" style="font-size: 1.4em" href="https://plus.google.com/share?url=http%3a%2f%2fgrandesdados.com%2fpost%2fcompilacao-do-spark-15-com-bugfix%2f"
+         onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <span class="hidden">Google+</span>
+      </a>
+    </section>
+    
+
+    
+    
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname = 'grandesdados';
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+    
+
+  </footer>
+</article>
+
+</main>
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="">Grandes Dados</a> Todos os direitos reservados - 2015</section>
+        
+        <section class="poweredby">Proudly generated by <a class="icon-hugo" href="http://gohugo.io">HUGO</a>, with <a class="icon-theme" href="https://github.com/vjeantet/hugo-theme-casper">Casper</a> theme</section>
+        
+    </footer>
+    </div>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/index.js"></script>
+
+</body>
+</html>
+
