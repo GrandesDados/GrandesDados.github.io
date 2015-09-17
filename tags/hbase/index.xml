@@ -7,8 +7,718 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
-    <lastBuildDate>Thu, 27 Aug 2015 06:00:00 -0300</lastBuildDate>
+    <lastBuildDate>Wed, 16 Sep 2015 23:26:07 -0300</lastBuildDate>
     <atom:link href="http://grandesdados.com/tags/hbase/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Configuração do Hadoop, HBase e Kafka na Máquina Local com Docker</title>
+      <link>http://grandesdados.com/post/configuracao-do-hadoop-hbase-e-kafka-na-maquina-local-com-docker/</link>
+      <pubDate>Wed, 16 Sep 2015 23:26:07 -0300</pubDate>
+      
+      <guid>http://grandesdados.com/post/configuracao-do-hadoop-hbase-e-kafka-na-maquina-local-com-docker/</guid>
+      <description>
+
+&lt;p&gt;Esse tutorial é sobre a criação de uma imagem do Docker com a configuração local do Hadoop, HBase e Kafka. Nesse procedimento, o Hadoop é configurado no modo pseudo-distribuído com cada serviço rodando em uma instância própria da JVM, mas todas na mesma máquina. O HBase e o Kafka também rodam em modo &amp;lsquo;distribuído&amp;rsquo; compartilhando uma instância separada do ZooKeeper. Esse procedimento é muito útil para testar funcionalidades desses serviços e aprendizado, mas não é uma solução completa para uso em produção.&lt;/p&gt;
+
+&lt;h2 id=&#34;pré-requisito:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Pré-requisito&lt;/h2&gt;
+
+&lt;p&gt;Nesse procedimento, é necessário que o Docker esteja instalado e funcionando; também é necessário acesso à Internet.&lt;/p&gt;
+
+&lt;p&gt;Originalmente, esse procedimento foi testado no ArchLinux atualizado até final de Agosto/2015.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/Docker&#34;&gt;https://wiki.archlinux.org/index.php/Docker&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker version
+
+&amp;gt; Client:
+&amp;gt;  Version:      1.8.1
+&amp;gt;  API version:  1.20
+&amp;gt;  Go version:   go1.4.2
+&amp;gt;  Git commit:   d12ea79
+&amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
+&amp;gt;  OS/Arch:      linux/amd64
+&amp;gt;
+&amp;gt; Server:
+&amp;gt;  Version:      1.8.1
+&amp;gt;  API version:  1.20
+&amp;gt;  Go version:   go1.4.2
+&amp;gt;  Git commit:   d12ea79
+&amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
+&amp;gt;  OS/Arch:      linux/amd64&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h2 id=&#34;configuração:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Configuração&lt;/h2&gt;
+
+&lt;p&gt;Hadoop, ZooKeeper, HBase e Kafka.&lt;/p&gt;
+
+&lt;h3 id=&#34;container:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Container&lt;/h3&gt;
+
+&lt;p&gt;Começamos com a criação de um conainer do Docker com a imagem do CentOS6.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Importante: para os endereços com &lt;code&gt;grandesdados-hadoop&lt;/code&gt; funcionarem fora do container, direto na máquina host, é necessário colocar no &lt;code&gt;/etc/hosts&lt;/code&gt; da máquina host o endereço IP do container do Docker para esse nome.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Ao executar o comando &lt;code&gt;run&lt;/code&gt;, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker run -i -t --name=grandesdados-hadoop --hostname=grandesdados-hadoop centos:6 /bin/bash
+
+&amp;gt; Unable to find image &amp;#39;centos:6&amp;#39; locally
+&amp;gt; 6: Pulling from library/centos
+&amp;gt;
+&amp;gt; f1b10cd84249: Pull complete
+&amp;gt; fb9cc58bde0c: Pull complete
+&amp;gt; a005304e4e74: Already exists
+&amp;gt; library/centos:6: The image you are pulling has been verified. Important: image verification is a tech preview feature and should not be relied on to provide security.
+&amp;gt;
+&amp;gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
+&amp;gt; Status: Downloaded newer image for centos:6
+&amp;gt; [root@grandesdados-hadoop /]#&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Já dentro do container criamos um usuário e local que serão usados para a instalação e execução dos processos.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;adduser -m -d /hadoop hadoop
+cd hadoop&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;A versão usada nesse procedimento é o Java 8, atual versão estável da Oracle.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -k -L -H &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
+rpm -i jdk-8u60-linux-x64.rpm
+
+echo &amp;#39;export JAVA_HOME=&amp;#34;/usr/java/jdk1.8.0_60&amp;#34;&amp;#39; &amp;gt; /etc/profile.d/java.sh
+source /etc/profile.d/java.sh
+
+echo $JAVA_HOME
+
+&amp;gt; /usr/java/jdk1.8.0_60
+
+java -version
+
+&amp;gt; java version &amp;#34;1.8.0_60&amp;#34;
+&amp;gt; Java(TM) SE Runtime Environment (build 1.8.0_60-b27)
+&amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 25.60-b23, mixed mode)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Para completar o ambiente de execução, instalamos os serviços e bibliotecas necessárias.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yum install -y tar openssh-clients openssh-server rsync gzip zlib openssl fuse bzip2 snappy
+
+&amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;(configuração do SSH para acesso sem senha)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;service sshd start
+chkconfig sshd on
+
+su - hadoop
+
+ssh-keygen -C hadoop -P &amp;#39;&amp;#39; -f ~/.ssh/id_rsa
+cp ~/.ssh/{id_rsa.pub,authorized_keys}
+
+ssh-keyscan grandesdados-hadoop &amp;gt;&amp;gt;  ~/.ssh/known_hosts
+ssh-keyscan localhost &amp;gt;&amp;gt; ~/.ssh/known_hosts
+ssh-keyscan 127.0.0.1 &amp;gt;&amp;gt; ~/.ssh/known_hosts
+ssh-keyscan 0.0.0.0 &amp;gt;&amp;gt; ~/.ssh/known_hosts
+
+ssh grandesdados-hadoop
+
+&amp;gt; Warning: Permanently added the RSA host key for IP address &amp;#39;172.17.0.12&amp;#39; to the list of known hosts.
+&amp;gt; (nova shell, sem login nem confirmação)
+
+# (sair do shell do ssh)
+exit
+# (sair do shell do su)
+exit
+
+whoami
+
+&amp;gt; root&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h3 id=&#34;hadoop:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Hadoop&lt;/h3&gt;
+
+&lt;p&gt;Procedimento para configuração local do Hadoop em modo pseudo-distribuído com uma JVM por serviço.&lt;/p&gt;
+
+&lt;p&gt;Esse procedimento é baseado na &lt;a href=&#34;http://hadoop.apache.org/docs/r2.7.1/hadoop-project-dist/hadoop-common/SingleCluster.html&#34;&gt;documentação do Hadoop&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Serviços:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;HDFS: NameNode, SecondaryNameNode, DataNode&lt;/li&gt;
+&lt;li&gt;YARN: ResouceManager, NodeManager&lt;/li&gt;
+&lt;li&gt;MR: HistoryServer&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Instalação&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;O pacote usado nesse procedimento é o Hadoop 2.7.1 para CentOS6 descrito outro &lt;a href=&#34;http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker&#34;&gt;artigo&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Primeiramente, colocamos o pacote dentro do container.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;# (shell fora do container)
+sudo docker cp hadoop-2.7.1.tar.gz grandesdados-hadoop:/hadoop&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;De volta ao container como usuário root.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;tar zxf hadoop-2.7.1.tar.gz -C /opt
+chown hadoop:hadoop -R /opt/hadoop-2.7.1
+
+echo &amp;#39;export PATH=$PATH:/opt/hadoop-2.7.1/bin:/opt/hadoop-2.7.1/sbin&amp;#39; &amp;gt; /etc/profile.d/hadoop.sh
+source /etc/profile.d/hadoop.sh
+
+hadoop version
+
+&amp;gt; Hadoop 2.7.1
+&amp;gt; Subversion Unknown -r Unknown
+&amp;gt; Compiled by hadoop on 2015-09-01T00:30Z
+&amp;gt; Compiled with protoc 2.5.0
+&amp;gt; From source with checksum fc0a1a23fc1868e4d5ee7fa2b28a58a
+&amp;gt; This command was run using /opt/hadoop-2.7.1/share/hadoop/common/hadoop-common-2.7.1.jar
+
+mkdir -p /data/hadoop
+chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Configuração&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(para a configuração, deve ser usado o usuário hadoop: &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/core-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;hadoop.tmp.dir&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;/data/hadoop&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;fs.defaultFS&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;hdfs://grandesdados-hadoop&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/hdfs-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;dfs.replication&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;1&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;dfs.blocksize&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;8M&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/yarn-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;yarn.nodemanager.aux-services&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;mapreduce_shuffle&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/mapred-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;mapreduce.framework.name&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;yarn&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+    &amp;lt;property&amp;gt;
+        &amp;lt;name&amp;gt;mapreduce.jobtracker.staging.root.dir&amp;lt;/name&amp;gt;
+        &amp;lt;value&amp;gt;/user&amp;lt;/value&amp;gt;
+    &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Setup Inicial (antes da primeira inicialização).&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;hdfs namenode -format
+
+&amp;gt; 15/09/16 02:12:03 INFO namenode.NameNode: STARTUP_MSG: 
+&amp;gt; /************************************************************
+&amp;gt; STARTUP_MSG: Starting NameNode
+&amp;gt; STARTUP_MSG:   host = grandesdados-hadoop/172.17.0.12
+&amp;gt; STARTUP_MSG:   args = [-format]
+&amp;gt; STARTUP_MSG:   version = 2.7.1
+&amp;gt; (...)
+&amp;gt; INFO namenode.NameNode: createNameNode [-format]
+&amp;gt; Formatting using clusterid: CID-5daa32a0-3ab6-405e-bfd2-05c0a6e1e7e6
+&amp;gt; (...)
+&amp;gt; INFO common.Storage: Storage directory /data/hadoop/dfs/name has been successfully formatted.
+&amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;HDFS&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(como usuário hadoop &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;start-dfs.sh
+
+&amp;gt; Starting namenodes on [grandesdados-hadoop]
+&amp;gt; grandesdados-hadoop: starting namenode, logging to /opt/hadoop-2.7.1/logs/hadoop-hadoop-namenode-grandesdados-hadoop.out
+&amp;gt; localhost: starting datanode, logging to /opt/hadoop-2.7.1/logs/hadoop-hadoop-datanode-grandesdados-hadoop.out
+&amp;gt; Starting secondary namenodes [0.0.0.0]
+&amp;gt; 0.0.0.0: starting secondarynamenode, logging to /opt/hadoop-2.7.1/logs/hadoop-hadoop-secondarynamenode-grandesdados-hadoop.out
+
+# criação do diretório do usuário hadoop
+hdfs dfs -mkdir -p /user/hadoop&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Name Node:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:50070/&#34;&gt;http://grandesdados-hadoop:50070/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Data Node (vazia):&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:50075/&#34;&gt;http://grandesdados-hadoop:50075/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Secondary Name Node:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:50090/&#34;&gt;http://grandesdados-hadoop:50090/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;stop-dfs.sh&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;YARN&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(como usuário hadoop &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;start-yarn.sh
+
+&amp;gt; starting yarn daemons
+&amp;gt; starting resourcemanager, logging to /opt/hadoop-2.7.1/logs/yarn-hadoop-resourcemanager-grandesdados-hadoop.out
+&amp;gt; localhost: starting nodemanager, logging to /opt/hadoop-2.7.1/logs/yarn-hadoop-nodemanager-grandesdados-hadoop.out&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Resource Manager:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:8088/&#34;&gt;http://grandesdados-hadoop:8088/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Node Manager:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:8042/&#34;&gt;http://grandesdados-hadoop:8042/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;stop-yarn.sh&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;History Server&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(como usuário hadoop &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;mr-jobhistory-daemon.sh start historyserver
+
+&amp;gt; starting historyserver, logging to /opt/hadoop-2.7.1/logs/mapred-hadoop-historyserver-grandesdados-hadoop.out&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Interface Web do History Server:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:19888/&#34;&gt;http://grandesdados-hadoop:19888/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;mr-jobhistory-daemon.sh stop historyserver&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Teste&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(para os testes, deve ser usado o usuário hadoop: &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Processos:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;ps x
+
+&amp;gt;   PID TTY      STAT   TIME COMMAND
+&amp;gt;  5162 ?        S      0:00 -bash
+&amp;gt;  5327 ?        Sl     0:08 /usr/java/jdk1.8.0_60/bin/java -Dproc_namenode (...)
+&amp;gt;  5423 ?        Sl     0:07 /usr/java/jdk1.8.0_60/bin/java -Dproc_datanode (...)
+&amp;gt;  5612 ?        Sl     0:06 /usr/java/jdk1.8.0_60/bin/java -Dproc_secondarynamenode (...)
+&amp;gt;  5772 ?        Sl     0:08 /usr/java/jdk1.8.0_60/bin/java -Dproc_resourcemanager (...)
+&amp;gt;  5870 ?        Sl     0:07 /usr/java/jdk1.8.0_60/bin/java -Dproc_nodemanager (...)
+&amp;gt;  6189 ?        Sl     0:08 /usr/java/jdk1.8.0_60/bin/java -Dproc_historyserver (...)
+&amp;gt;  6273 ?        R&amp;#43;     0:00 ps x&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Exemplos de MapReduce:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yarn jar /opt/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar
+
+&amp;gt; An example program must be given as the first argument.
+&amp;gt; Valid program names are:
+&amp;gt;   aggregatewordcount: An Aggregate based map/reduce program that counts the words in the input files.
+&amp;gt;   aggregatewordhist: An Aggregate based map/reduce program that computes the histogram of the words in the input files.
+&amp;gt;   bbp: A map/reduce program that uses Bailey-Borwein-Plouffe to compute exact digits of Pi.
+&amp;gt;   dbcount: An example job that count the pageview counts from a database.
+&amp;gt;   distbbp: A map/reduce program that uses a BBP-type formula to compute exact bits of Pi.
+&amp;gt;   grep: A map/reduce program that counts the matches of a regex in the input.
+&amp;gt;   join: A job that effects a join over sorted, equally partitioned datasets
+&amp;gt;   multifilewc: A job that counts words from several files.
+&amp;gt;   pentomino: A map/reduce tile laying program to find solutions to pentomino problems.
+&amp;gt;   pi: A map/reduce program that estimates Pi using a quasi-Monte Carlo method.
+&amp;gt;   randomtextwriter: A map/reduce program that writes 10GB of random textual data per node.
+&amp;gt;   randomwriter: A map/reduce program that writes 10GB of random data per node.
+&amp;gt;   secondarysort: An example defining a secondary sort to the reduce.
+&amp;gt;   sort: A map/reduce program that sorts the data written by the random writer.
+&amp;gt;   sudoku: A sudoku solver.
+&amp;gt;   teragen: Generate data for the terasort
+&amp;gt;   terasort: Run the terasort
+&amp;gt;   teravalidate: Checking results of terasort
+&amp;gt;   wordcount: A map/reduce program that counts the words in the input files.
+&amp;gt;   wordmean: A map/reduce program that counts the average length of the words in the input files.
+&amp;gt;   wordmedian: A map/reduce program that counts the median length of the words in the input files.
+&amp;gt;   wordstandarddeviation: A map/reduce program that counts the standard deviation of the length of the words in the input files.&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Rodando o Cálculo do Pi com MapReduce:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yarn jar /opt/hadoop-2.7.1/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.1.jar pi 16 100000
+
+&amp;gt; Number of Maps  = 16
+&amp;gt; Samples per Map = 100000
+&amp;gt; (...)
+&amp;gt; INFO impl.YarnClientImpl: Submitted application application_1442439610364_0001
+&amp;gt; INFO mapreduce.Job: The url to track the job: http://grandesdados-hadoop:8088/proxy/application_1442439610364_0001/
+&amp;gt; INFO mapreduce.Job: Running job: job_1442439610364_0001
+&amp;gt; (...)
+&amp;gt; Job Finished in 48.333 seconds
+&amp;gt; Estimated value of Pi is 3.14157500000000000000&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h3 id=&#34;zookeeper:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;ZooKeeper&lt;/h3&gt;
+
+&lt;p&gt;Esse procedimento é baseado na &lt;a href=&#34;https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html&#34;&gt;documentação do ZooKeeper&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dentro do container como usuário root:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O http://archive.apache.org/dist/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz
+tar zxf zookeeper-3.4.6.tar.gz -C /opt
+chown hadoop:hadoop -R /opt/zookeeper-3.4.6
+
+echo &amp;#39;export PATH=$PATH:/opt/zookeeper-3.4.6/bin&amp;#39; &amp;gt; /etc/profile.d/zookeeper.sh
+source /etc/profile.d/zookeeper.sh
+
+mkdir -p /data/zookeeper
+chown hadoop:hadoop /data/zookeeper&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/zookeeper-3.4.6/conf/zoo.cfg&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-ini&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;tickTime=6000
+dataDir=/data/zookeeper
+clientPort=2181&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Inicializando o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;su - hadoop
+zkServer.sh start
+
+&amp;gt; JMX enabled by default
+&amp;gt; Using config: /opt/zookeeper-3.4.6/bin/../conf/zoo.cfg
+&amp;gt; Starting zookeeper ... STARTED&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;zkServer.sh stop&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Teste&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(para os testes, deve ser usado o usuário hadoop: &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Processo:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;ps x | grep zoo
+
+&amp;gt; 8246 ?        Sl     0:00 /usr/java/jdk1.8.0_60/bin/java (...) org.apache.zookeeper.server.quorum.QuorumPeerMain (...)
+&amp;gt; 8291 ?        S&amp;#43;     0:00 grep zoo&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Telnet:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;echo &amp;#39;ruok&amp;#39; |  curl telnet://grandesdados-hadoop:2181
+
+&amp;gt; imok&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Cliente:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;zkCli.sh -server grandesdados-hadoop:2181
+
+&amp;gt; Connecting to grandesdados-hadoop:2181
+&amp;gt; ...
+&amp;gt; [zk: grandesdados-hadoop:2181(CONNECTED) 0] ls /
+&amp;gt; [zookeeper]
+&amp;gt; [zk: grandesdados-hadoop:2181(CONNECTED) 1] help
+&amp;gt; ZooKeeper -server host:port cmd args
+&amp;gt; 	stat path [watch]
+&amp;gt; 	set path data [version]
+&amp;gt; 	ls path [watch]
+&amp;gt; 	delquota [-n|-b] path
+&amp;gt; 	ls2 path [watch]
+&amp;gt; 	setAcl path acl
+&amp;gt; 	setquota -n|-b val path
+&amp;gt; 	history 
+&amp;gt; 	redo cmdno
+&amp;gt; 	printwatches on|off
+&amp;gt; 	delete path [version]
+&amp;gt; 	sync path
+&amp;gt; 	listquota path
+&amp;gt; 	rmr path
+&amp;gt; 	get path [watch]
+&amp;gt; 	create [-s] [-e] path data acl
+&amp;gt; 	addauth scheme auth
+&amp;gt; 	quit 
+&amp;gt; 	getAcl path
+&amp;gt; 	close 
+&amp;gt; 	connect host:port
+&amp;gt; [zk: grandesdados-hadoop:2181(CONNECTED) 3] quit&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h3 id=&#34;hbase:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;HBase&lt;/h3&gt;
+
+&lt;p&gt;Esse procedimento é baseado na &lt;a href=&#34;http://hbase.apache.org/book.html#quickstart&#34;&gt;documentação do HBase&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dentro do container como usuário root:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O http://archive.apache.org/dist/hbase/1.1.2/hbase-1.1.2-bin.tar.gz
+tar zxf hbase-1.1.2-bin.tar.gz -C /opt
+chown hadoop:hadoop -R /opt/hbase-1.1.2
+
+echo &amp;#39;export PATH=$PATH:/opt/hbase-1.1.2/bin&amp;#39; &amp;gt; /etc/profile.d/hbase.sh
+source /etc/profile.d/hbase.sh
+
+mkdir -p /data/hbase/tmp
+chown hadoop:hadoop -R /data/hbase&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hbase-1.1.2/conf/hbase-site.xml&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
+  &amp;lt;property&amp;gt;
+    &amp;lt;name&amp;gt;hbase.cluster.distributed&amp;lt;/name&amp;gt;
+    &amp;lt;value&amp;gt;true&amp;lt;/value&amp;gt;
+  &amp;lt;/property&amp;gt;
+  &amp;lt;property&amp;gt;
+    &amp;lt;name&amp;gt;hbase.rootdir&amp;lt;/name&amp;gt;
+    &amp;lt;value&amp;gt;hdfs:///hbase&amp;lt;/value&amp;gt;
+  &amp;lt;/property&amp;gt;
+  &amp;lt;property&amp;gt;
+    &amp;lt;name&amp;gt;hbase.tmp.dir&amp;lt;/name&amp;gt;
+    &amp;lt;value&amp;gt;/data/hbase/tmp&amp;lt;/value&amp;gt;
+  &amp;lt;/property&amp;gt;
+  &amp;lt;property&amp;gt;
+    &amp;lt;name&amp;gt;hbase.zookeeper.quorum&amp;lt;/name&amp;gt;
+    &amp;lt;value&amp;gt;grandesdados-hadoop&amp;lt;/value&amp;gt;
+  &amp;lt;/property&amp;gt;
+&amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/hbase-1.1.2/conf/hbase-env.sh&lt;/code&gt;:
+&lt;br/&gt;(manter conteúdo original, só alterar os valores abaixo)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;export HBASE_OPTS=&amp;#34;-XX:&amp;#43;UseConcMarkSweepGC -Djava.net.preferIPv4Stack=true&amp;#34;
+export HBASE_MANAGES_ZK=false&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Inicializando o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;su - hadoop
+start-hbase.sh
+
+&amp;gt; starting master, logging to /opt/hbase-1.1.2/bin/../logs/hbase-hadoop-master-grandesdados-hadoop.out
+&amp;gt; Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=128m; support was removed in 8.0
+&amp;gt; Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=128m; support was removed in 8.0
+&amp;gt; starting regionserver, logging to /opt/hbase-1.1.2/bin/../logs/hbase-hadoop-1-regionserver-grandesdados-hadoop.out&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Master:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:16010/&#34;&gt;http://grandesdados-hadoop:16010/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Interface Web do Region Server:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://grandesdados-hadoop:16301/&#34;&gt;http://grandesdados-hadoop:16301/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;stop-hbase.sh&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Teste&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(para os testes, deve ser usado o usuário hadoop: &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Processo:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;ps x | grep hbase
+
+&amp;gt; 8790 ?        S      0:00 bash /opt/hbase-1.1.2/bin/hbase-daemon.sh --config /opt/hbase-1.1.2/bin/../conf foreground_start master
+&amp;gt; 8804 ?        Sl     0:14 /usr/java/jdk1.8.0_60/bin/java -Dproc_master (...)
+&amp;gt; 8915 ?        S      0:00 bash /opt/hbase-1.1.2/bin/hbase-daemon.sh --config /opt/hbase-1.1.2/bin/../conf foreground_start regionserver -D hbase.regionserver.port=16201 -D hbase.regionserver.info.port=16301
+&amp;gt; 8929 ?        Sl     0:14 /usr/java/jdk1.8.0_60/bin/java -Dproc_regionserver (...)
+&amp;gt; 9329 ?        S&amp;#43;     0:00 grep hbase&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Cliente:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;hbase shell
+
+&amp;gt; HBase Shell; enter &amp;#39;help&amp;lt;RETURN&amp;gt;&amp;#39; for list of supported commands.
+&amp;gt; Type &amp;#34;exit&amp;lt;RETURN&amp;gt;&amp;#34; to leave the HBase Shell
+&amp;gt; Version 1.1.2, rcc2b70cf03e3378800661ec5cab11eb43fafe0fc, Wed Aug 26 20:11:27 PDT 2015
+&amp;gt;
+&amp;gt; hbase(main):001:0&amp;gt; status
+&amp;gt; 1 servers, 0 dead, 2.0000 average load
+&amp;gt;
+&amp;gt; hbase(main):002:0&amp;gt; help
+&amp;gt; HBase Shell, version 1.1.2, rcc2b70cf03e3378800661ec5cab11eb43fafe0fc, Wed Aug 26 20:11:27 PDT 2015
+&amp;gt; Type &amp;#39;help &amp;#34;COMMAND&amp;#34;&amp;#39;, (e.g. &amp;#39;help &amp;#34;get&amp;#34;&amp;#39; -- the quotes are necessary) for help on a specific command.
+&amp;gt; Commands are grouped. Type &amp;#39;help &amp;#34;COMMAND_GROUP&amp;#34;&amp;#39;, (e.g. &amp;#39;help &amp;#34;general&amp;#34;&amp;#39;) for help on a command group.
+&amp;gt; (...)
+&amp;gt; hbase(main):004:0&amp;gt; exit&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h3 id=&#34;kafka:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Kafka&lt;/h3&gt;
+
+&lt;p&gt;Esse procedimento é baseado na &lt;a href=&#34;http://kafka.apache.org/documentation.html#quickstart&#34;&gt;documentação do Kafka&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Dentro do container como usuário root:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O http://archive.apache.org/dist/kafka/0.8.2.1/kafka_2.10-0.8.2.1.tgz
+tar zxf kafka_2.10-0.8.2.1.tgz -C /opt
+chown hadoop:hadoop -R /opt/kafka_2.10-0.8.2.1
+
+echo &amp;#39;export PATH=$PATH:/opt/kafka_2.10-0.8.2.1/bin&amp;#39; &amp;gt; /etc/profile.d/kafka.sh
+source /etc/profile.d/kafka.sh
+
+mkdir -p /data/kafka
+chown hadoop:hadoop /data/kafka&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Editar &lt;code&gt;/opt/kafka_2.10-0.8.2.1/config/server.properties&lt;/code&gt;:
+&lt;br/&gt;(manter conteúdo original, só alterar os valores abaixo)&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-ini&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;log.dirs=/data/kafka
+zookeeper.connect=grandesdados-hadoop:2181&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Inicializando o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;su - hadoop
+kafka-server-start.sh /opt/kafka_2.10-0.8.2.1/config/server.properties &amp;amp;&amp;gt; kafka.out &amp;amp;&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Para parar o serviço:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;kafka-server-stop.sh /opt/kafka_2.10-0.8.2.1/config/server.properties&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Teste&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;(para os testes, deve ser usado o usuário hadoop: &lt;code&gt;su - hadoop&lt;/code&gt;)&lt;/p&gt;
+
+&lt;p&gt;Processo:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;ps x | grep kafka
+
+&amp;gt; 9818 ?        Sl     0:03 /usr/java/jdk1.8.0_60/bin/java (...) kafka.Kafka /opt/kafka_2.10-0.8.2.1/config/server.properties
+&amp;gt; 9928 ?        S&amp;#43;     0:00 grep kafka&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Enviando e recebendo mensagens:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;kafka-topics.sh \
+--create \
+--zookeeper grandesdados-hadoop:2181 \
+--replication-factor 1 \
+--partitions 1 \
+--topic test
+
+&amp;gt; Created topic &amp;#34;test&amp;#34;.
+
+echo &amp;#39;Primeira mensagem de teste&amp;#39; | kafka-console-producer.sh --broker-list grandesdados-hadoop:9092 --topic test
+
+&amp;gt; (...)
+
+kafka-console-consumer.sh --zookeeper grandesdados-hadoop:2181 --topic test --from-beginning
+
+&amp;gt; Primeira mensagem de teste
+&amp;gt; ^CConsumed 1 messages&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusão:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Conclusão&lt;/h2&gt;
+
+&lt;p&gt;A revolução em BigData é um fenômeno da tecnologia desenvolvida ao longo dos últimos anos focada na manipulação de um grande volume de dados em máquinas de baixo custo. Essa é a tecnologia que torna possível combinar uma solução de dados escalável com processos para geração de resultados relevantes, tanto no desenvolvimento de produtos quanto na evolução do conhecimento. O importante é entender como essa tecnologia pode ser usada para agregar valor ao negócio e permitir imaginar soluções inovadoras.&lt;/p&gt;
+
+&lt;p&gt;Esse artigo documenta o passo-a-passo de uma configuração local do Hadoop, ZooKeeper, HBase e Kafka. Essas são os serviços essenciais em uma plataforma de BigData, juntamente com o Spark, possibilita o desenvolvimento de soluções tanto para processamento batch quanto para tempo real.&lt;/p&gt;
+
+&lt;p&gt;Em artigos futuros, entrarei usando essa solução para desenvolver e testar algumas aplicações de BigData usando Spark.&lt;/p&gt;
+
+&lt;p&gt;&amp;hellip;&lt;/p&gt;
+
+&lt;p&gt;Você trabalha com Hadoop, HBase, Kafka ou tem experiência com as tecnologias envolvidas? Venha trabalhar conosco.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://talentos.globo.com/&#34;&gt;http://talentos.globo.com/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>BigData na Globo.com</title>

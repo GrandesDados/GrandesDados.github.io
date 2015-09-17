@@ -273,6 +273,13 @@ mvn test -Pnative -Drequire.snappy -Drequire.openssl -Dmaven.test.failure.ignore
 
 &lt;p&gt;&lt;code&gt;/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2.7.1.tar.gz&lt;/code&gt;&lt;/p&gt;
 
+&lt;p&gt;Para copiar do container para a máquina host:
+&lt;br/&gt;(&lt;code&gt;3cc2bc5e593b&lt;/code&gt; é o identificador do container no Docker)
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;# shell na máquina
+sudo docker cp 3cc2bc5e593b:/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2.7.1.tar.gz .&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
 &lt;h2 id=&#34;conclusão:ac8d87b01c866329a85ac2f7311bc677&#34;&gt;Conclusão&lt;/h2&gt;
 
 &lt;p&gt;Esse procedimento mostra como o Hadoop pode ser customizado para necessidades específicas e que não requer um esforço muito grande.&lt;/p&gt;
