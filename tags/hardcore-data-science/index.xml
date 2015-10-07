@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Hardcore Data Science on Grandes Dados</title>
+    <link>http://grandesdados.com/tags/hardcore-data-science/</link>
+    <description>Recent content in Hardcore Data Science on Grandes Dados</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>pt-br</language>
+    <copyright>Todos os direitos reservados - 2015</copyright>
+    <lastBuildDate>Wed, 07 Oct 2015 19:00:00 -0300</lastBuildDate>
+    <atom:link href="http://grandesdados.com/tags/hardcore-data-science/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>O que eu vi Strata &#43; Hadoop World NY 2015 - PARTE 1</title>
+      <link>http://grandesdados.com/post/o-que-eu-vi-na-strata-ny-parte-1/</link>
+      <pubDate>Wed, 07 Oct 2015 19:00:00 -0300</pubDate>
+      
+      <guid>http://grandesdados.com/post/o-que-eu-vi-na-strata-ny-parte-1/</guid>
+      <description>
+
+&lt;p&gt;Na última semana (29-01 de Outubro) estive na &lt;a href=&#34;http://strataconf.com/big-data-conference-ny-2015&#34;&gt;Strata&lt;/a&gt; em Nova Iorque, o evento de Big Data mais importante do ano, pela Globo.com.&lt;/p&gt;
+
+&lt;p&gt;O evento foi bem interessante, foi importante a confirmação que a &lt;a href=&#34;http://grandesdados.com/post/bigdata-na-globocom/&#34;&gt;arquitetura usada por nós&lt;/a&gt; do time de Big Data da Globo.com é a mesma usada nos players mais respeitados e o futuro parece ser na direção de Deep Learning, tema discutido em várias apresentações.&lt;/p&gt;
+
+&lt;p&gt;No primeiro dia foram os tutoriais, eu escolhi o &lt;a href=&#34;http://strataconf.com/big-data-conference-ny-2015/public/content/hardcore-data-science&#34;&gt;Hardcore Data Science&lt;/a&gt;, na verdade era uma sala dedicada a apresentações somente do tema de Data Science que uniu profissionais do mercado (Facebook, Microsoft e Databricks) com pesquisadores das principais universidades americanas (MIT, Stanford e Berkeley), ficou claro nessa apresentação que o Spark MLlib é largamente usada, que há um tendência em cada vez usar mais algoritmos de redes neurais (Deep Learning), outro assunto que foi muito comentado foi a união de tempo real com Machine Learning (Spark Streaming e MLlib).&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Nem todas as apresentações já disponibilizaram os slides, as que estão disponíveis são acessíveis via link no título.&lt;/em&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;hardcore-data-science-em-mais-detalhes:5779ebb12f5692ed75d165452d0e4c37&#34;&gt;Hardcore Data Science em mais detalhes&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;http://stanford.edu/~rezab/slides/stratany2015.pdf&#34;&gt;GPU/CPU acceleration for matrix computations and neural networks on Spark&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;https://twitter.com/Reza_Zadeh&#34;&gt;Reza Zadeh&lt;/a&gt;, que é de Stanford e da Databricks, ele trabalha nos projetos dedicados a Machine Learning e algébra linear do Spark.&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado como o Spark pode ser usado para Deep Learning, mostrou a API de redes neurais disponível no Spark. O foco era como o Spark facilita para escalar as redes neurais, mostrando como o Spark pode ser usado para distribuir as matrizes pelo cluster. Falou que a ideia de &amp;ldquo;maquina barata&amp;rdquo; do Hadoop para o cluster precisa mudar um pouco para processar matrizes (indo até Deep Learning), precisando de mais CPU e GPU locais para aumento de performance. No final ele mostrou quais são os milestones do Spark para esse caminho, que para o 1.6 são Convolutional Neural Networks e Dropout, different layer types, e para o 1.7 Recurrent Neural Networks and LSTMs.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;http://www.cs.columbia.edu/~blei/talks/Blei_User_Behavior.pdf&#34;&gt;Probabilistic topic models and user behavior&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;http://www.cs.columbia.edu/~blei/&#34;&gt;David Blei&lt;/a&gt;, que é de Columbia.&lt;/p&gt;
+
+&lt;p&gt;Foi tratado do problema de como representar um texto por meio de palavras-chave e anotações. Foi dito que tópico é uma sequência de palavras em um determinado momento, isso diz que as palavras chave de um texto podem mudar dado o tempo, o exemplo dado foi como coisas como tecnologia viram commodites com o passar do tempo. Foi dito que &lt;a href=&#34;https://www.wikiwand.com/en/Latent_Dirichlet_allocation&#34;&gt;LDA&lt;/a&gt; é um ótimo algoritmo para a classificação de um documento ser automatizada. Contou o problema dos termos não terem metadados (ontologias servem para suprir esse ponto), outro ponto muito comentado foi como é importante classificar com imparcialidade dado que isso pode mudar completamente a descrição de um texto. Ele mudou a matriz de lado e mostrou como os leitores podem falar sobre o texto usando a abordagem conhecida como &lt;a href=&#34;https://www.cs.princeton.edu/~chongw/papers/WangBlei2011.pdf&#34;&gt;Collaborative Topic Models&lt;/a&gt;. Foi uma apresentação bem densa e vale a pena a consulta sobre os detalhes apresentados.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;FBLearner Flow - Facebook machine learning platform&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;https://www.linkedin.com/pub/hussein-mehanna/1/19b/792&#34;&gt;Hussein Mehana&lt;/a&gt;, que é o principal engenheiro da plataforma de Machine Learning interna do Facebook.&lt;/p&gt;
+
+&lt;p&gt;Foi mostrada a plataforma usada pelos cientistas de dados do Facebook tanto para fazer exploração como para rodar em produção algoritmos. Essa plataforma tem toda uma camada de Workflow junto com sampling de dados para facilitar a integração dos códigos novos bem como o tuning dos mesmos, eles chamam isso de ML-Pipeline, para um job entrar nesse workflow ele usa decoradores no código (a linguagem de exemplo foi Python), ele mostrou a interação entre dois jobs com interdependência (chamou isso de channel), sendo transparente para os usuários. Além da parte de orquestração de jobs ele mostrou uma interface gráfica que é gerada após os resultados ajudando na exploração, nesse ponto me pareceu com o &lt;a href=&#34;http://gethue.com/&#34;&gt;HUE&lt;/a&gt;. Um ponto levantado foi a importância de ter 1 ambiente de sandbox separado da infraestrutura para o cliente final, mas que tenha a mesma carga do outro ambiente possibilitando testes sem impactar o usuário.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;KeystoneML: Building large-scale machine learning pipelines on Apache Spark&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;http://www.eecs.berkeley.edu/~brecht/&#34;&gt;Ben Recht&lt;/a&gt;, que é de Berkeley.&lt;/p&gt;
+
+&lt;p&gt;Começou a apresentação explicando o &lt;a href=&#34;http://keystone-ml.org/&#34;&gt;Keystone ML&lt;/a&gt; que é um framework para criação de pipelines para Machine Learning. Pareceu muito promissor eles contribuíram fortemente com o spark.ml. Um exemplo de pipeline foi do processamento de textos com &lt;a href=&#34;https://www.wikiwand.com/en/Bag-of-words_model&#34;&gt;saco de palavras&lt;/a&gt;, indo para &lt;a href=&#34;https://www.wikiwand.com/en/Tf%E2%80%93idf&#34;&gt;TF-IDF&lt;/a&gt;, &lt;a href=&#34;https://www.wikiwand.com/en/Latent_Dirichlet_allocation&#34;&gt;LDA&lt;/a&gt; e &lt;a href=&#34;https://www.wikiwand.com/en/Conditional_random_field&#34;&gt;CRF&lt;/a&gt;. Ele mostrou como eles tão usando essa arquitetura aplicada a Deep Learning. Esse projeto tem bind para C em vários pontos pensando em performance. Me pareceu uma biblioteca bem madura, testada e documentada. É um projeto para ficar de olho.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Crowdsourcing your data&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;http://www.jennwv.com/&#34;&gt;Jenn Wortman Vaughan&lt;/a&gt;, que é pesquisadora da Microsoft.&lt;/p&gt;
+
+&lt;p&gt;Nessa apresentação foi levantado o ponto de que ter muitos dados para Machine Learning é complicado, a maioria das empresas tem que validar as suas ideias com poucos usuários. O ponto é que há mecanismos como o &lt;a href=&#34;https://www.mturk.com/mturk/welcome&#34;&gt;Amazon Mechanical Turk&lt;/a&gt; que ajudam a coletar dados fazendo com que pessoas de verdade sejam usuários em um experimento. Algumas empresas também estão pagando a alguns usuários para preencherem pesquisas ajudando na coleta de mais informações sobre eles. Há uma grande demanda do mercado por dados, ela mostrou como empresas grandes como Facebook e Netflix já abriram parte dos seus dados anonimizados gerando uma gama de papers que podem melhorar seus próprios produtos &amp;ldquo;de graça&amp;rdquo;. Ela mostrou como que a falta de conhecimento dos usuários no caso de anúncios pode gerar prejuízo para quem disponibiliza um banner, anúncios ruins podem custar mais de $1 à cada 1000 pageviews feitos.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Minds and machines: Humans where they&amp;rsquo;re best, robots for the rest&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;http://marcua.net/&#34;&gt;Adam Marcus&lt;/a&gt;, que é co-fundador da Unlimited Labs.&lt;/p&gt;
+
+&lt;p&gt;Lançou uma plataforma Open Source chamada &lt;a href=&#34;http://orchestra.unlimitedlabs.com/&#34;&gt;ORCHESTRA&lt;/a&gt;, essa plataforma visa a curadoria de conteúdos por especialistas, ele cria todo um workflow e permite a interação dos especialistas com o autor do trabalho, o foco é como melhorar o trabalho em equipe unindo-o com o trabalho das máquinas, como por exemplo deixando crop de imagens para o computador fazer.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Learning with Counts: Extreme-scale featurization made easy&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentando por &lt;a href=&#34;http://research.microsoft.com/en-us/um/people/mbilenko/&#34;&gt;Mikhail Bilenko&lt;/a&gt;, que é pesquisador líder da divisão de Machine Learning da Microsoft (Azure).&lt;/p&gt;
+
+&lt;p&gt;Ele seguiu a apresentação mostrando como o estado da arte da área de Machine Learning pode sofrer com problemas de performance. Ele apresentou o &lt;a href=&#34;http://blogs.technet.com/b/machinelearning/archive/2015/02/17/big-learning-made-easy-with-counts.aspx&#34;&gt;DRACULA&lt;/a&gt; (Algoritmo robusto distribuído para aprendizagem baseada em contagem), que é como um objeto é referenciado olhando um histórico de contagem, por exemplo clique em matérias. O objetivo é que o &lt;a href=&#34;https://studio.azureml.net/&#34;&gt;Azure ML&lt;/a&gt; consiga calcular todos os dados de forma rápida com muito valor agregado, um ponto que foi destacado foi usar o máximo de dados reais para o experimento, mostrando como dados em produção podem se comportar diferente dos amostrais.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;http://pt.slideshare.net/databricks/sketching-big-data-with-spark-randomized-algorithms-for-largescale-data-analytics&#34;&gt;Sketching big data with Spark: Randomized algorithms for large-scale data analytics&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Foi apresentado por &lt;a href=&#34;http://www.cs.berkeley.edu/~rxin/&#34;&gt;Reynold Xin&lt;/a&gt;, que é co-fundador da Databricks e líder do Spark.&lt;/p&gt;
+
+&lt;p&gt;Ele mostrou como o caminho do Sketching é muito bom para conhecer os seus dados e fazer um processamento com resultados mais rápidos e nos ajustes dos parâmetros de tuning dos algoritmos. Falou sobre como podemos usar as técnicas de sketching no Spark (bloom filter, itens frequentes e modelo de Bernoulli, ordenação randomica) e como ele é um ótimo caminho para isso.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;Se você gosta de Big Data e quer fazer parte de uma empresa que investe no conhecimento do profissional, como em idas a eventos internacionais e nacionais e com ótimos treinamentos internos, estamos contratando.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://talentos.globo.com/&#34;&gt;http://talentos.globo.com/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

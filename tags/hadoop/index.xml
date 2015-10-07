@@ -1067,8 +1067,7 @@ sudo docker cp 3cc2bc5e593b:/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2
 
 &lt;h3 id=&#34;hadoop:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Hadoop&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hadoop-logo.jpg&#34; alt=&#34;Hadoop logo&#34; /&gt;
-&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hadoop-logo.jpg&#34; alt=&#34;Hadoop logo&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;O Hadoop torna o custo por byte de armazenamento / processamento marginal e por isso torna BigData possível na escala de hoje. O problema que o Hadoop resolve é de otimizar a utilização de múltiplas máquinas por vários processos.&lt;/p&gt;
 
@@ -1121,8 +1120,7 @@ sudo docker cp 3cc2bc5e593b:/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2
 
 &lt;h3 id=&#34;hbase:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;HBase&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hbase-logo.png&#34; alt=&#34;HBase logo&#34; /&gt;
-&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/hbase-logo.png&#34; alt=&#34;HBase logo&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;O HBase é um banco de dados sem esquema que suporta bilhões de linhas por tabela. Inspirado no paper BigTable do Google, suporta uma estrutura chave-valor ordenada, multidimensional, esparsa, distribuída e persistente. O principal benefício é o suporte para operação eficiente com pequenos blocos de bytes em complemento ao HDFS que opera melhor com grandes blocos.&lt;/p&gt;
 
@@ -1169,8 +1167,7 @@ sudo docker cp 3cc2bc5e593b:/hadoop/hadoop-2.7.1-src/hadoop-dist/target/hadoop-2
 
 &lt;h3 id=&#34;kafka:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Kafka&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/kafka-logo.png&#34; alt=&#34;Kafka logo&#34; /&gt;
-&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/kafka-logo.png&#34; alt=&#34;Kafka logo&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;O Kafka é um cluster de distribuição de mensagens que escala para um grande número de produtores e consumidores. Criado pelo LinkedIn, o Kafka tornou-se a tecnologia fundamental para uma arquitetura de dados stream. Com o Kafka, é possível concentrar e distribuir um fluxo muito grande de dados que podem ser acessados tanto para processamento em tempo real quanto para processamento em lote. O principal benefício é o acesso direto ao dado quase no mesmo instante em que ele é gerado.&lt;/p&gt;
 
@@ -1210,8 +1207,7 @@ httpd://spark.apache.org/streaming/&lt;/p&gt;
 
 &lt;h3 id=&#34;spark:f639fdd98dff6b631b8bb3edbce40bc8&#34;&gt;Spark&lt;/h3&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/spark-logo.png&#34; alt=&#34;Spark logo&#34; /&gt;
-&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/bigdata_na_globocom/spark-logo.png&#34; alt=&#34;Spark logo&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;O Spark é um framework para processamento distribuído de grande quantidade de dados com foco em análise interativa. O Spark tem uma API simples que torna fácil escrever desde pequenas manipulações de dados, até algoritmos iterativos complexos, de forma escalável e com boas práticas de engenharia de software (testes). Essa característica o torna a ferramenta ideal de trabalho tanto para o Data Engineer que tem que desenvolver uma solução de dados, quanto para o Data Scientist que tem que desenvolver modelos e visualizações. Dessa forma, o Spark hoje é composto por um conjunto grande de funcionalidades com suporte DataFrame / SQL, Machine Learning, Streaming e Processamento de Grafos. Também é o projeto mais popular na área de BigData e cada nova versão adiciona ainda mais abrangência e inovação.&lt;/p&gt;
 
@@ -1324,8 +1320,7 @@ Linha 2: outro RDD é criado e filtra linhas que contenham a palavra &amp;ldquo;
 Linha 3: para cada linha com a palavra &amp;ldquo;ERROR&amp;rdquo;, uma operação de map associa ao valor 1 em outro RDD;
 Linha 4: Uma operação de reduce, soma todos os valores e retorna para o programa driver.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg&#34; alt=&#34;Encadeamento de dependências dos RDDs&#34; /&gt;
-&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg&#34; alt=&#34;Encadeamento de dependências dos RDDs&#34; /&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;rdd-versus-memória-compartilhada:aeed7472b10a84461abb6a3dcf5257fc&#34;&gt;RDD versus Memória Compartilhada&lt;/h2&gt;
 
@@ -1342,8 +1337,7 @@ Linha 4: Uma operação de reduce, soma todos os valores e retorna para o progra
 &lt;p&gt;O Spark foi construído a partir do sistema Mesos, uma espécie de sistema operacional de cluster, que cria uma abstração para que aplicações Spark possam usufruir de um cluster Hadoop. O Spark é escrito em Scala e os usuários podem escrever seu código em Scala, Java ou Python.&lt;/p&gt;
 
 &lt;p&gt;Uma aplicação Spark é composta de apenas um código principal, chamado de driver, que se conecta aos workers do cluster. O driver define um ou mais RDDs e realiza operações sobre eles.
-&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png&#34; alt=&#34;Arquitetura de tarefas Spark&#34; /&gt;
-&lt;/p&gt;
+&lt;img src=&#34;http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png&#34; alt=&#34;Arquitetura de tarefas Spark&#34; /&gt;&lt;/p&gt;
 
 &lt;p&gt;As operações sobre os RDDs podem ser de dois tipos:&lt;/p&gt;
 

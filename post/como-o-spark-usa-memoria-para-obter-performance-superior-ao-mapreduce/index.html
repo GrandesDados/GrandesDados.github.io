@@ -177,8 +177,7 @@ Linha 2: outro RDD é criado e filtra linhas que contenham a palavra &ldquo;ERRO
 Linha 3: para cada linha com a palavra &ldquo;ERROR&rdquo;, uma operação de map associa ao valor 1 em outro RDD;
 Linha 4: Uma operação de reduce, soma todos os valores e retorna para o programa driver.</p>
 
-<p><img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg" alt="Encadeamento de dependências dos RDDs" />
-</p>
+<p><img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_rdd.svg" alt="Encadeamento de dependências dos RDDs" /></p>
 
 <h2 id="rdd-versus-memória-compartilhada:aeed7472b10a84461abb6a3dcf5257fc">RDD versus Memória Compartilhada</h2>
 
@@ -195,8 +194,7 @@ Linha 4: Uma operação de reduce, soma todos os valores e retorna para o progra
 <p>O Spark foi construído a partir do sistema Mesos, uma espécie de sistema operacional de cluster, que cria uma abstração para que aplicações Spark possam usufruir de um cluster Hadoop. O Spark é escrito em Scala e os usuários podem escrever seu código em Scala, Java ou Python.</p>
 
 <p>Uma aplicação Spark é composta de apenas um código principal, chamado de driver, que se conecta aos workers do cluster. O driver define um ou mais RDDs e realiza operações sobre eles.
-<img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png" alt="Arquitetura de tarefas Spark" />
-</p>
+<img src="http://grandesdados.com/images/posts/como_funciona_o_spark/spark_workers.png" alt="Arquitetura de tarefas Spark" /></p>
 
 <p>As operações sobre os RDDs podem ser de dois tipos:</p>
 
