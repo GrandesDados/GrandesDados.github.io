@@ -34,7 +34,7 @@
 
 &lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/Docker&#34;&gt;https://wiki.archlinux.org/index.php/Docker&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker version
 
 &amp;gt; Client:
@@ -52,7 +52,7 @@
 &amp;gt;  Git commit:   d12ea79
 &amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &amp;gt;  OS/Arch:      linux/amd64&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h2 id=&#34;compilação:ac8d87b01c866329a85ac2f7311bc677&#34;&gt;Compilação&lt;/h2&gt;
 
@@ -68,7 +68,7 @@
 
 &lt;p&gt;Ao executar o comando &lt;code&gt;run&lt;/code&gt;, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker run -i -t centos:6 /bin/bash
 
 &amp;gt; Unable to find image &amp;#39;centos:6&amp;#39; locally
@@ -82,28 +82,28 @@
 &amp;gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
 &amp;gt; Status: Downloaded newer image for centos:6
 &amp;gt; [root@3cc2bc5e593b /]#&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Já dentro do container criamos um usuário e local que serão usados na compilação e geração do pacote.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;adduser -m -d /hadoop hadoop
 cd hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para a compilação das bibliotecas nativas é necessária a instalação do compilador C e mais alguns pacotes de desenvolvimento (cabeçalhos das bibliotecas usadas pelo Hadoop).&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yum install -y tar gzip gcc-c&amp;#43;&amp;#43; cmake zlib zlib-devel openssl openssl-devel fuse fuse-devel bzip2 bzip2-devel snappy snappy-devel
 
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O Hadoop ainda depende de duas outras bibliotecas que precisam ser instaladas manualmente no CentOS: Google ProtoBuf 2.5 (RPC), Jansson (JSON).&lt;/p&gt;
 
 &lt;p&gt;Para instalar o ProtoBuf, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
 tar zxf protobuf-2.5.0.tar.gz
 cd protobuf-2.5.0
@@ -113,11 +113,11 @@ make check
 make install
 
 cd ..&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para instalar o Jansson, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -O http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
 tar zxf jansson-2.7.tar.gz
 cd jansson-2.7
@@ -126,23 +126,23 @@ make
 make install
 
 cd ..&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para completar o ambiente de compilação, precisamos do JDK e do Maven.&lt;/p&gt;
 
 &lt;p&gt;No caso do JDK, usaremos o pacote RPM já disponibilizado pela Oracle.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -k -L -H &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
 rpm -i jdk-8u60-linux-x64.rpm&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;No caso do Maven, usaremos o pacote binário de distribuição da Apache.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 tar zxf apache-maven-3.3.3-bin.tar.gz&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O ambiente  de compilação está completo.&lt;/p&gt;
 

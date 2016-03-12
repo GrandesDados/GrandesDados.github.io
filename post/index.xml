@@ -7,8 +7,124 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
-    <lastBuildDate>Wed, 07 Oct 2015 19:00:00 -0300</lastBuildDate>
+    <lastBuildDate>Sat, 12 Mar 2016 01:30:34 -0300</lastBuildDate>
     <atom:link href="http://grandesdados.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Testes de jobs Spark com JUnit</title>
+      <link>http://grandesdados.com/post/testes-spark-junit/</link>
+      <pubDate>Sat, 12 Mar 2016 01:30:34 -0300</pubDate>
+      
+      <guid>http://grandesdados.com/post/testes-spark-junit/</guid>
+      <description>
+
+&lt;p&gt;A boa prática de desenvolvimento de software diz que devemos criar sempre testes para nossos códigos, e no universo de Big Data não deveria ser diferente. Neste artigo apresento como testar um código Spark com JUnit para jobs que rodam em batch (não-streaming).&lt;/p&gt;
+
+&lt;p&gt;Os códigos deste artigo estão disponíveis em &lt;a href=&#34;https://github.com/werneckpaiva/spark-junit&#34;&gt;https://github.com/werneckpaiva/spark-junit&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;build-e-gerenciamento-de-dependências:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Build e gerenciamento de dependências&lt;/h2&gt;
+
+&lt;p&gt;O script abaixo define a configuração do build usando a ferramenta Gradle. Com ele baixamos as dependências do Spark para a nossa máquina e configuramos os testes&lt;/p&gt;
+
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;apply plugin: &amp;#39;scala&amp;#39;
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile &amp;#39;org.slf4j:slf4j-api:1.7.12&amp;#39;
+    compile &amp;#39;org.slf4j:slf4j-log4j12:1.7.12&amp;#39;
+    compile &amp;#39;org.scala-lang:scala-library:2.10.6&amp;#39;
+    compile(&amp;#39;org.apache.hadoop:hadoop-client:2.7.1&amp;#39;) {
+        exclude group: &amp;#39;javax.servlet&amp;#39;
+        exclude group: &amp;#39;javax.servlet.jsp&amp;#39;
+        exclude group: &amp;#39;org.mortbay.jetty&amp;#39;
+    }
+    compile(&amp;#39;org.apache.spark:spark-core_2.10:1.6.1&amp;#39;) {
+        exclude group: &amp;#39;org.apache.hadoop&amp;#39;
+    }
+    compile &amp;#39;org.apache.spark:spark-sql_2.10:1.6.1&amp;#39;
+    compile &amp;#39;org.apache.spark:spark-streaming_2.10:1.6.1&amp;#39;
+    testCompile &amp;#39;junit:junit:4.11&amp;#39;
+}
+
+test {
+    testLogging {
+        events &amp;#34;passed&amp;#34;, &amp;#34;skipped&amp;#34;, &amp;#34;failed&amp;#34;
+        exceptionFormat &amp;#34;full&amp;#34;
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+
+
+&lt;h2 id=&#34;criando-a-classe-de-testes:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Criando a classe de testes&lt;/h2&gt;
+
+&lt;p&gt;Ao criar um teste de um job Spark você precisa iniciar o SparkContext local antes de todos os testes e encerrá-lo no final. O ponto chave desta configuração é definir o master do Spark para &lt;code&gt;local&lt;/code&gt;, desta forma o Spark irá rodar localmente, sem depender de nenhum gerenciador de recursos (como o Yarn).&lt;/p&gt;
+
+&lt;p&gt;Primeiro crie um object que inicia e termina o SparkContext no início dos testes:&lt;/p&gt;
+
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;object TestMyCode {
+  var sc: SparkContext = _
+
+  @BeforeClass
+  def before(): Unit = {
+    val sparkConf = new SparkConf()
+      .setAppName(&amp;#34;Test Spark Batch&amp;#34;)
+      .setMaster(&amp;#34;local&amp;#34;)
+    sc = new SparkContext(sparkConf)
+  }
+
+  @AfterClass
+  def after(): Unit = {
+    sc.stop()
+  }
+
+}&lt;/code&gt;&lt;/pre&gt;
+
+
+&lt;p&gt;Crie a classe com os seus testes. Inicie a classe permitindo que o SparkContext esteja disponível, e crie um contexto SQLContext baseado no SparkContext para poder fazer uso de recursos de DataFrame:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;class TestMyCode {
+  import TestMyCode._
+  val sql = new SQLContext(sc)
+  import sql.implicits._
+
+  // ...
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;O código de seus testes devem começar criando um RDD utilizando o método &lt;code&gt;parallellize()&lt;/code&gt; do SparkContext. Se o seu código é baseado em DataFrames, você pode usar o método &lt;code&gt;toDF&lt;/code&gt;, disponível quando você importa o implict do SqlContext.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;@Test
+def testCountPairNumbers(): Unit = {
+  val data = List(1, 2, 3, 4, 5, 6)
+  val df =  sc.parallelize(data).toDF
+
+  # Código que está querendo testar
+  val count = MyOperations.countPairs(df)
+
+  assertEquals(3, count)
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h2 id=&#34;rodando-os-testes:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Rodando os testes&lt;/h2&gt;
+
+&lt;p&gt;Para rodar os teste, você pode usar seu IDE (no Eclipse, clique com botão direito no arquivo do teste, selecione Run as &amp;gt; Scala JUnit Test). Podemos usar o Gradle para rodar todos os testes pela linha de comando:&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;gradle clean test&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Pronto! Você já pode criar e rodar testes para seu código Spark. Espero que tenha ajudado. Em breve escreverei um post ensinando como testar um código de Spark Streaming.&lt;/p&gt;
+
+&lt;p&gt;Post original em &lt;a href=&#34;http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/&#34;&gt;http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>O que eu vi Strata &#43; Hadoop World NY 2015 - PARTE 1</title>
@@ -113,7 +229,7 @@
 
 &lt;p&gt;&lt;a href=&#34;http://yelp.github.io/MOE/install.html#install-from-source&#34;&gt;http://yelp.github.io/MOE/install.html#install-from-source&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;mkdir grandesdados-opt
 cd grandesdados-opt
 
@@ -145,7 +261,7 @@ pserve --reload development.ini
 &amp;gt; serving on 0.0.0.0:6543 view at http://127.0.0.1:6543
 
 # (nesse momento, esse terminal fica &amp;#39;preso&amp;#39; mostrando o log do servidor do MOE)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O próximo passo é instalar o algoritmo que tem parâmetros que precisam ser otimizados.&lt;/p&gt;
 
@@ -159,7 +275,7 @@ pserve --reload development.ini
 
 &lt;p&gt;(procedimento na mesma pasta anterior &lt;code&gt;grandesdados-opt&lt;/code&gt;)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O http://ftp.unicamp.br/pub/apache/spark/spark-1.5.0/spark-1.5.0-bin-hadoop2.6.tgz
 tar zxf spark-1.5.0-bin-hadoop2.6.tgz
 cd spark-1.5.0-bin-hadoop2.6/
@@ -168,11 +284,11 @@ cp conf/log4j.properties{.template,}
 sed -i s/log4j\.rootCategory\=INFO/log4j\.rootCategory\=ERROR/1 conf/log4j.properties
 
 echo &amp;#34;spark.ui.showConsoleProgress=false&amp;#34; &amp;gt; conf/spark-defaults.conf&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Executando o exemplo do MovieLens (a saída são os parâmetros):&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;./bin/run-example ml.MovieLensALS
 
 &amp;gt; Error: Missing option --ratings
@@ -200,7 +316,7 @@ echo &amp;#34;spark.ui.showConsoleProgress=false&amp;#34; &amp;gt; conf/spark-de
 &amp;gt;   --rank 10 --maxIter 15 --regParam 0.1 \
 &amp;gt;   --movies data/mllib/als/sample_movielens_movies.txt \
 &amp;gt;   --ratings data/mllib/als/sample_movielens_ratings.txt&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Fazendo uma execução:&lt;/p&gt;
 
@@ -346,7 +462,7 @@ if __name__ == &amp;#39;__main__&amp;#39;:
 
 &lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/Docker&#34;&gt;https://wiki.archlinux.org/index.php/Docker&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker version
 
 &amp;gt; Client:
@@ -364,7 +480,7 @@ if __name__ == &amp;#39;__main__&amp;#39;:
 &amp;gt;  Git commit:   d12ea79
 &amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &amp;gt;  OS/Arch:      linux/amd64&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h2 id=&#34;configuração:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Configuração&lt;/h2&gt;
 
@@ -380,7 +496,7 @@ if __name__ == &amp;#39;__main__&amp;#39;:
 
 &lt;p&gt;Ao executar o comando &lt;code&gt;run&lt;/code&gt;, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker run -i -t --name=grandesdados-hadoop --hostname=grandesdados-hadoop centos:6 /bin/bash
 
 &amp;gt; Unable to find image &amp;#39;centos:6&amp;#39; locally
@@ -394,18 +510,18 @@ if __name__ == &amp;#39;__main__&amp;#39;:
 &amp;gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
 &amp;gt; Status: Downloaded newer image for centos:6
 &amp;gt; [root@grandesdados-hadoop /]#&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Já dentro do container criamos um usuário e local que serão usados para a instalação e execução dos processos.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;adduser -m -d /hadoop hadoop
 cd hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;A versão usada nesse procedimento é o Java 8, atual versão estável da Oracle.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -k -L -H &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
 rpm -i jdk-8u60-linux-x64.rpm
 
@@ -421,19 +537,19 @@ java -version
 &amp;gt; java version &amp;#34;1.8.0_60&amp;#34;
 &amp;gt; Java(TM) SE Runtime Environment (build 1.8.0_60-b27)
 &amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 25.60-b23, mixed mode)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para completar o ambiente de execução, instalamos os serviços e bibliotecas necessárias.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yum install -y tar openssh-clients openssh-server rsync gzip zlib openssl fuse bzip2 snappy
 
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;(configuração do SSH para acesso sem senha)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;service sshd start
 chkconfig sshd on
 
@@ -460,7 +576,7 @@ exit
 whoami
 
 &amp;gt; root&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h3 id=&#34;hadoop:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Hadoop&lt;/h3&gt;
 
@@ -480,18 +596,18 @@ whoami
 
 &lt;p&gt;&lt;strong&gt;Instalação&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;O pacote usado nesse procedimento é o Hadoop 2.7.1 para CentOS6 descrito outro &lt;a href=&#34;http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker&#34;&gt;artigo&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;O pacote usado nesse procedimento é o Hadoop 2.7.1 para CentOS6 descrito outro &lt;a href=&#34;http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker/&#34;&gt;artigo&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Primeiramente, colocamos o pacote dentro do container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;# (shell fora do container)
 sudo docker cp hadoop-2.7.1.tar.gz grandesdados-hadoop:/hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;De volta ao container como usuário root.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;tar zxf hadoop-2.7.1.tar.gz -C /opt
 chown hadoop:hadoop -R /opt/hadoop-2.7.1
 
@@ -509,7 +625,7 @@ hadoop version
 
 mkdir -p /data/hadoop
 chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;&lt;strong&gt;Configuração&lt;/strong&gt;&lt;/p&gt;
 
@@ -517,7 +633,7 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/core-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;hadoop.tmp.dir&amp;lt;/name&amp;gt;
@@ -528,11 +644,11 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;hdfs://grandesdados-hadoop&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/hdfs-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;dfs.replication&amp;lt;/name&amp;gt;
@@ -543,22 +659,22 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;8M&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/yarn-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;yarn.nodemanager.aux-services&amp;lt;/name&amp;gt;
         &amp;lt;value&amp;gt;mapreduce_shuffle&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/mapred-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;mapreduce.framework.name&amp;lt;/name&amp;gt;
@@ -569,11 +685,11 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;/user&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Setup Inicial (antes da primeira inicialização).&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;hdfs namenode -format
 
 &amp;gt; 15/09/16 02:12:03 INFO namenode.NameNode: STARTUP_MSG: 
@@ -588,7 +704,7 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
 &amp;gt; (...)
 &amp;gt; INFO common.Storage: Storage directory /data/hadoop/dfs/name has been successfully formatted.
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;&lt;strong&gt;HDFS&lt;/strong&gt;&lt;/p&gt;
 
@@ -1076,7 +1192,7 @@ kafka-console-consumer.sh --zookeeper grandesdados-hadoop:2181 --topic test --fr
 
 &lt;p&gt;(nesse procedimento, foi usado o ArchLinux atualizado até essa primeira semana de Setembro)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;wget --no-check-certificate --no-cookies --header &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jdk-7u80-linux-x64.tar.gz
 
 tar zxf jdk-7u80-linux-x64.tar.gz
@@ -1089,7 +1205,7 @@ java -version
 &amp;gt; java version &amp;#34;1.7.0_80&amp;#34;
 &amp;gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
 &amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;(OSX)&lt;/p&gt;
 
@@ -1099,7 +1215,7 @@ java -version
 
 &lt;p&gt;No terminal, a versão específica do Java pode ser configurada ajustando a variável de ambiente:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;export JAVA_HOME=&amp;#34;$(/usr/libexec/java_home -v 1.7)&amp;#34;
 
 java -version
@@ -1107,13 +1223,13 @@ java -version
 &amp;gt; java version &amp;#34;1.7.0_80&amp;#34;
 &amp;gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
 &amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;&lt;strong&gt;Maven&lt;/strong&gt;&lt;/p&gt;
 
 &lt;p&gt;A construção do Spark depende da versão 3.3 do Maven.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;wget http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 
 tar zxf apache-maven-3.3.3-bin.tar.gz
@@ -1128,7 +1244,7 @@ mvn -version
 &amp;gt; Java home: /home/cavani/Software/jdk1.7.0_80/jre
 &amp;gt; Default locale: en_US, platform encoding: UTF-8
 &amp;gt; OS name: &amp;#34;linux&amp;#34;, version: &amp;#34;4.0.4-2-arch&amp;#34;, arch: &amp;#34;amd64&amp;#34;, family: &amp;#34;unix&amp;#34;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h2 id=&#34;compilação:a471447a7b0c139f517b6888cdad9c6e&#34;&gt;Compilação&lt;/h2&gt;
 
@@ -1136,7 +1252,7 @@ mvn -version
 
 &lt;p&gt;(use &lt;code&gt;--depth 1&lt;/code&gt; para baixar apenas os arquivos finais, sem o histórico de mudanças, diminui o download)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;git clone https://github.com/apache/spark.git --branch branch-1.5 spark-1.5
 
 &amp;gt; Cloning into &amp;#39;spark-1.5&amp;#39;...
@@ -1147,7 +1263,7 @@ mvn -version
 &amp;gt; Checking connectivity... done.
 
 cd spark-1.5&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;A partir desse branch serão criados todos os releases 1.5.x.&lt;/p&gt;
 
@@ -1334,7 +1450,7 @@ mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/Docker&#34;&gt;https://wiki.archlinux.org/index.php/Docker&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker version
 
 &amp;gt; Client:
@@ -1352,7 +1468,7 @@ mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .&lt;/code&gt;&lt;/pre&gt;
 &amp;gt;  Git commit:   d12ea79
 &amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &amp;gt;  OS/Arch:      linux/amd64&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h2 id=&#34;compilação:ac8d87b01c866329a85ac2f7311bc677&#34;&gt;Compilação&lt;/h2&gt;
 
@@ -1368,7 +1484,7 @@ mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Ao executar o comando &lt;code&gt;run&lt;/code&gt;, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker run -i -t centos:6 /bin/bash
 
 &amp;gt; Unable to find image &amp;#39;centos:6&amp;#39; locally
@@ -1382,28 +1498,28 @@ mv ~/.m2/repository/spark-1.5.0-m2-89d351b.tar .&lt;/code&gt;&lt;/pre&gt;
 &amp;gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
 &amp;gt; Status: Downloaded newer image for centos:6
 &amp;gt; [root@3cc2bc5e593b /]#&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Já dentro do container criamos um usuário e local que serão usados na compilação e geração do pacote.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;adduser -m -d /hadoop hadoop
 cd hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para a compilação das bibliotecas nativas é necessária a instalação do compilador C e mais alguns pacotes de desenvolvimento (cabeçalhos das bibliotecas usadas pelo Hadoop).&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yum install -y tar gzip gcc-c&amp;#43;&amp;#43; cmake zlib zlib-devel openssl openssl-devel fuse fuse-devel bzip2 bzip2-devel snappy snappy-devel
 
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O Hadoop ainda depende de duas outras bibliotecas que precisam ser instaladas manualmente no CentOS: Google ProtoBuf 2.5 (RPC), Jansson (JSON).&lt;/p&gt;
 
 &lt;p&gt;Para instalar o ProtoBuf, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
 tar zxf protobuf-2.5.0.tar.gz
 cd protobuf-2.5.0
@@ -1413,11 +1529,11 @@ make check
 make install
 
 cd ..&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para instalar o Jansson, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -O http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
 tar zxf jansson-2.7.tar.gz
 cd jansson-2.7
@@ -1426,23 +1542,23 @@ make
 make install
 
 cd ..&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para completar o ambiente de compilação, precisamos do JDK e do Maven.&lt;/p&gt;
 
 &lt;p&gt;No caso do JDK, usaremos o pacote RPM já disponibilizado pela Oracle.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -k -L -H &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
 rpm -i jdk-8u60-linux-x64.rpm&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;No caso do Maven, usaremos o pacote binário de distribuição da Apache.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 tar zxf apache-maven-3.3.3-bin.tar.gz&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O ambiente  de compilação está completo.&lt;/p&gt;
 

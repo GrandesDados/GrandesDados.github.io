@@ -57,7 +57,7 @@
       
       
     
-    <meta name="generator" content="Hugo 0.14" />
+    <meta name="generator" content="Hugo 0.15" />
 
     <link rel="canonical" href="http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker/" />
 
@@ -177,7 +177,7 @@
 
 <p><a href="https://wiki.archlinux.org/index.php/Docker">https://wiki.archlinux.org/index.php/Docker</a></p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">sudo docker version
 
 &gt; Client:
@@ -195,7 +195,7 @@
 &gt;  Git commit:   d12ea79
 &gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &gt;  OS/Arch:      linux/amd64</code></pre>
-</p>
+
 
 <h2 id="compilação:ac8d87b01c866329a85ac2f7311bc677">Compilação</h2>
 
@@ -211,7 +211,7 @@
 
 <p>Ao executar o comando <code>run</code>, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">sudo docker run -i -t centos:6 /bin/bash
 
 &gt; Unable to find image &#39;centos:6&#39; locally
@@ -225,28 +225,28 @@
 &gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
 &gt; Status: Downloaded newer image for centos:6
 &gt; [root@3cc2bc5e593b /]#</code></pre>
-</p>
+
 
 <p>Já dentro do container criamos um usuário e local que serão usados na compilação e geração do pacote.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">adduser -m -d /hadoop hadoop
 cd hadoop</code></pre>
-</p>
+
 
 <p>Para a compilação das bibliotecas nativas é necessária a instalação do compilador C e mais alguns pacotes de desenvolvimento (cabeçalhos das bibliotecas usadas pelo Hadoop).</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">yum install -y tar gzip gcc-c&#43;&#43; cmake zlib zlib-devel openssl openssl-devel fuse fuse-devel bzip2 bzip2-devel snappy snappy-devel
 
 &gt; (...)</code></pre>
-</p>
+
 
 <p>O Hadoop ainda depende de duas outras bibliotecas que precisam ser instaladas manualmente no CentOS: Google ProtoBuf 2.5 (RPC), Jansson (JSON).</p>
 
 <p>Para instalar o ProtoBuf, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -L -O https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
 tar zxf protobuf-2.5.0.tar.gz
 cd protobuf-2.5.0
@@ -256,11 +256,11 @@ make check
 make install
 
 cd ..</code></pre>
-</p>
+
 
 <p>Para instalar o Jansson, é necessário baixar o pacote, configurar para as pastas do CentOS (64 bits) e instalar.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -O http://www.digip.org/jansson/releases/jansson-2.7.tar.gz
 tar zxf jansson-2.7.tar.gz
 cd jansson-2.7
@@ -269,23 +269,23 @@ make
 make install
 
 cd ..</code></pre>
-</p>
+
 
 <p>Para completar o ambiente de compilação, precisamos do JDK e do Maven.</p>
 
 <p>No caso do JDK, usaremos o pacote RPM já disponibilizado pela Oracle.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -k -L -H &#34;Cookie: oraclelicense=accept-securebackup-cookie&#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
 rpm -i jdk-8u60-linux-x64.rpm</code></pre>
-</p>
+
 
 <p>No caso do Maven, usaremos o pacote binário de distribuição da Apache.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -O http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 tar zxf apache-maven-3.3.3-bin.tar.gz</code></pre>
-</p>
+
 
 <p>O ambiente  de compilação está completo.</p>
 

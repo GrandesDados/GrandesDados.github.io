@@ -57,7 +57,7 @@
       
       
     
-    <meta name="generator" content="Hugo 0.14" />
+    <meta name="generator" content="Hugo 0.15" />
 
     <link rel="canonical" href="http://grandesdados.com/post/otimizacao-dos-parametros-do-spark-als-collaborative-filtering-usando-moe/" />
 
@@ -182,7 +182,7 @@
 
 <p><a href="http://yelp.github.io/MOE/install.html#install-from-source">http://yelp.github.io/MOE/install.html#install-from-source</a></p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">mkdir grandesdados-opt
 cd grandesdados-opt
 
@@ -214,7 +214,7 @@ pserve --reload development.ini
 &gt; serving on 0.0.0.0:6543 view at http://127.0.0.1:6543
 
 # (nesse momento, esse terminal fica &#39;preso&#39; mostrando o log do servidor do MOE)</code></pre>
-</p>
+
 
 <p>O próximo passo é instalar o algoritmo que tem parâmetros que precisam ser otimizados.</p>
 
@@ -228,7 +228,7 @@ pserve --reload development.ini
 
 <p>(procedimento na mesma pasta anterior <code>grandesdados-opt</code>)</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">curl -L -O http://ftp.unicamp.br/pub/apache/spark/spark-1.5.0/spark-1.5.0-bin-hadoop2.6.tgz
 tar zxf spark-1.5.0-bin-hadoop2.6.tgz
 cd spark-1.5.0-bin-hadoop2.6/
@@ -237,11 +237,11 @@ cp conf/log4j.properties{.template,}
 sed -i s/log4j\.rootCategory\=INFO/log4j\.rootCategory\=ERROR/1 conf/log4j.properties
 
 echo &#34;spark.ui.showConsoleProgress=false&#34; &gt; conf/spark-defaults.conf</code></pre>
-</p>
+
 
 <p>Executando o exemplo do MovieLens (a saída são os parâmetros):</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">./bin/run-example ml.MovieLensALS
 
 &gt; Error: Missing option --ratings
@@ -269,7 +269,7 @@ echo &#34;spark.ui.showConsoleProgress=false&#34; &gt; conf/spark-defaults.conf<
 &gt;   --rank 10 --maxIter 15 --regParam 0.1 \
 &gt;   --movies data/mllib/als/sample_movielens_movies.txt \
 &gt;   --ratings data/mllib/als/sample_movielens_ratings.txt</code></pre>
-</p>
+
 
 <p>Fazendo uma execução:</p>
 

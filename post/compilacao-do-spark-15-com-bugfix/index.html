@@ -51,7 +51,7 @@
       
       
     
-    <meta name="generator" content="Hugo 0.14" />
+    <meta name="generator" content="Hugo 0.15" />
 
     <link rel="canonical" href="http://grandesdados.com/post/compilacao-do-spark-15-com-bugfix/" />
 
@@ -179,7 +179,7 @@
 
 <p>(nesse procedimento, foi usado o ArchLinux atualizado até essa primeira semana de Setembro)</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">wget --no-check-certificate --no-cookies --header &#34;Cookie: oraclelicense=accept-securebackup-cookie&#34; http://download.oracle.com/otn-pub/java/jdk/7u80-b15/jdk-7u80-linux-x64.tar.gz
 
 tar zxf jdk-7u80-linux-x64.tar.gz
@@ -192,7 +192,7 @@ java -version
 &gt; java version &#34;1.7.0_80&#34;
 &gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
 &gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)</code></pre>
-</p>
+
 
 <p>(OSX)</p>
 
@@ -202,7 +202,7 @@ java -version
 
 <p>No terminal, a versão específica do Java pode ser configurada ajustando a variável de ambiente:</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">export JAVA_HOME=&#34;$(/usr/libexec/java_home -v 1.7)&#34;
 
 java -version
@@ -210,13 +210,13 @@ java -version
 &gt; java version &#34;1.7.0_80&#34;
 &gt; Java(TM) SE Runtime Environment (build 1.7.0_80-b15)
 &gt; Java HotSpot(TM) 64-Bit Server VM (build 24.80-b11, mixed mode)</code></pre>
-</p>
+
 
 <p><strong>Maven</strong></p>
 
 <p>A construção do Spark depende da versão 3.3 do Maven.</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">wget http://archive.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.tar.gz
 
 tar zxf apache-maven-3.3.3-bin.tar.gz
@@ -231,7 +231,7 @@ mvn -version
 &gt; Java home: /home/cavani/Software/jdk1.7.0_80/jre
 &gt; Default locale: en_US, platform encoding: UTF-8
 &gt; OS name: &#34;linux&#34;, version: &#34;4.0.4-2-arch&#34;, arch: &#34;amd64&#34;, family: &#34;unix&#34;</code></pre>
-</p>
+
 
 <h2 id="compilação:a471447a7b0c139f517b6888cdad9c6e">Compilação</h2>
 
@@ -239,7 +239,7 @@ mvn -version
 
 <p>(use <code>--depth 1</code> para baixar apenas os arquivos finais, sem o histórico de mudanças, diminui o download)</p>
 
-<p>
+
 <pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">git clone https://github.com/apache/spark.git --branch branch-1.5 spark-1.5
 
 &gt; Cloning into &#39;spark-1.5&#39;...
@@ -250,7 +250,7 @@ mvn -version
 &gt; Checking connectivity... done.
 
 cd spark-1.5</code></pre>
-</p>
+
 
 <p>A partir desse branch serão criados todos os releases 1.5.x.</p>
 

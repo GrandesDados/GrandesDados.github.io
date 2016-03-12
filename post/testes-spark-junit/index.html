@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  	<meta property="og:title" content=" Testes de jobs Spark com JUnit &middot;  Grandes Dados" />
+  	<meta property="og:site_name" content="Grandes Dados" />
+  	<meta property="og:url" content="http://grandesdados.com/post/testes-spark-junit/" />
+
+    
+        <meta property="og:image" content="http://grandesdados.com/images/posts/testes-spark-junit/header.jpg" />
+    
+
+
+    
+  	<meta property="og:type" content="article" />
+
+    <meta property="og:article:published_time" content="2016-03-12T01:30:34-03:00" />
+
+    
+    <meta property="og:article:tag" content="spark" />
+    
+    <meta property="og:article:tag" content="test" />
+    
+    <meta property="og:article:tag" content="junit" />
+    
+    <meta property="og:article:tag" content="gradle" />
+    
+    
+
+    <title>
+         Testes de jobs Spark com JUnit &middot;  Grandes Dados
+    </title>
+
+    
+        <meta name="description" content="Blog de BigData" />
+    
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="http://grandesdados.com/images/favicon.ico">
+	  <link rel="apple-touch-icon" href="http://grandesdados.com/images/apple-touch-icon.png" />
+
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="http://grandesdados.com/css/nav.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400|Inconsolata" />
+
+
+    
+      
+          <link href="http://grandesdados.com/index.xml" rel="alternate" type="application/rss+xml" title="Grandes Dados" />
+      
+      
+    
+    <meta name="generator" content="Hugo 0.15" />
+
+    <link rel="canonical" href="http://grandesdados.com/post/testes-spark-junit/" />
+
+    
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-38960920-6', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+    
+
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/solarized_dark.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+<body class="nav-closed">
+
+  <div class="nav">
+    <h3 class="nav-title">Menu</h3>
+    <a href="#" class="nav-close">
+        <span class="hidden">Close</span>
+    </a>
+    <ul>
+        
+        
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="http://grandesdados.com/">Blog</a>
+            </li>
+        
+            
+            <li class="nav-opened" role="presentation">
+            	<a href="https://github.com/GrandesDados">GitHub</a>
+            </li>
+        
+    </ul>
+    
+    
+    <a class="subscribe-button icon-feed" href="http://grandesdados.com/index.xml">Subscribe</a>
+    
+</div>
+<span class="nav-cover"></span>
+
+
+ <div class="site-wrapper">
+
+
+
+
+<header class="main-header post-head" style="background-image: url(http://grandesdados.com/images/posts/testes-spark-junit/header.jpg)">
+  <nav class="main-nav overlay clearfix">
+
+
+  
+  
+      <a class="menu-button" href="#"><span class="burger">&#9776;</span><span class="word">Menu</span></a>
+  
+  </nav>
+</header>
+
+
+
+<main class="content" role="main">
+
+
+
+
+  <article class="post post">
+
+    <header class="post-header">
+        <h1 class="post-title">Testes de jobs Spark com JUnit</h1>
+        <small></small>
+
+        <section class="post-meta">
+        
+          <time class="post-date" datetime="2016-03-12T01:30:34-03:00">
+            Mar 12, 2016
+          </time>
+        
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/spark/">#spark</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/test/">#test</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/junit/">#junit</a></span>
+         
+          <span class="post-tag small"><a href="http://grandesdados.com/tags/gradle/">#gradle</a></span>
+         
+        </section>
+    </header>
+  
+    <section class="post-content">
+      
+
+<p>A boa prática de desenvolvimento de software diz que devemos criar sempre testes para nossos códigos, e no universo de Big Data não deveria ser diferente. Neste artigo apresento como testar um código Spark com JUnit para jobs que rodam em batch (não-streaming).</p>
+
+<p>Os códigos deste artigo estão disponíveis em <a href="https://github.com/werneckpaiva/spark-junit">https://github.com/werneckpaiva/spark-junit</a></p>
+
+<h2 id="build-e-gerenciamento-de-dependências:b5aa752cc1d5b8aaa758c40936f63c66">Build e gerenciamento de dependências</h2>
+
+<p>O script abaixo define a configuração do build usando a ferramenta Gradle. Com ele baixamos as dependências do Spark para a nossa máquina e configuramos os testes</p>
+
+
+<pre><code class="language-javascript" style="font-size: medium; line-height: 1.2;">apply plugin: &#39;scala&#39;
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile &#39;org.slf4j:slf4j-api:1.7.12&#39;
+    compile &#39;org.slf4j:slf4j-log4j12:1.7.12&#39;
+    compile &#39;org.scala-lang:scala-library:2.10.6&#39;
+    compile(&#39;org.apache.hadoop:hadoop-client:2.7.1&#39;) {
+        exclude group: &#39;javax.servlet&#39;
+        exclude group: &#39;javax.servlet.jsp&#39;
+        exclude group: &#39;org.mortbay.jetty&#39;
+    }
+    compile(&#39;org.apache.spark:spark-core_2.10:1.6.1&#39;) {
+        exclude group: &#39;org.apache.hadoop&#39;
+    }
+    compile &#39;org.apache.spark:spark-sql_2.10:1.6.1&#39;
+    compile &#39;org.apache.spark:spark-streaming_2.10:1.6.1&#39;
+    testCompile &#39;junit:junit:4.11&#39;
+}
+
+test {
+    testLogging {
+        events &#34;passed&#34;, &#34;skipped&#34;, &#34;failed&#34;
+        exceptionFormat &#34;full&#34;
+    }
+}</code></pre>
+
+
+<h2 id="criando-a-classe-de-testes:b5aa752cc1d5b8aaa758c40936f63c66">Criando a classe de testes</h2>
+
+<p>Ao criar um teste de um job Spark você precisa iniciar o SparkContext local antes de todos os testes e encerrá-lo no final. O ponto chave desta configuração é definir o master do Spark para <code>local</code>, desta forma o Spark irá rodar localmente, sem depender de nenhum gerenciador de recursos (como o Yarn).</p>
+
+<p>Primeiro crie um object que inicia e termina o SparkContext no início dos testes:</p>
+
+
+<pre><code class="language-python" style="font-size: medium; line-height: 1.2;">object TestMyCode {
+  var sc: SparkContext = _
+
+  @BeforeClass
+  def before(): Unit = {
+    val sparkConf = new SparkConf()
+      .setAppName(&#34;Test Spark Batch&#34;)
+      .setMaster(&#34;local&#34;)
+    sc = new SparkContext(sparkConf)
+  }
+
+  @AfterClass
+  def after(): Unit = {
+    sc.stop()
+  }
+
+}</code></pre>
+
+
+<p>Crie a classe com os seus testes. Inicie a classe permitindo que o SparkContext esteja disponível, e crie um contexto SQLContext baseado no SparkContext para poder fazer uso de recursos de DataFrame:</p>
+
+<p>
+<pre><code class="language-python" style="font-size: medium; line-height: 1.2;">class TestMyCode {
+  import TestMyCode._
+  val sql = new SQLContext(sc)
+  import sql.implicits._
+
+  // ...
+}</code></pre>
+</p>
+
+<p>O código de seus testes devem começar criando um RDD utilizando o método <code>parallellize()</code> do SparkContext. Se o seu código é baseado em DataFrames, você pode usar o método <code>toDF</code>, disponível quando você importa o implict do SqlContext.</p>
+
+<p>
+<pre><code class="language-python" style="font-size: medium; line-height: 1.2;">@Test
+def testCountPairNumbers(): Unit = {
+  val data = List(1, 2, 3, 4, 5, 6)
+  val df =  sc.parallelize(data).toDF
+
+  # Código que está querendo testar
+  val count = MyOperations.countPairs(df)
+
+  assertEquals(3, count)
+}</code></pre>
+</p>
+
+<h2 id="rodando-os-testes:b5aa752cc1d5b8aaa758c40936f63c66">Rodando os testes</h2>
+
+<p>Para rodar os teste, você pode usar seu IDE (no Eclipse, clique com botão direito no arquivo do teste, selecione Run as &gt; Scala JUnit Test). Podemos usar o Gradle para rodar todos os testes pela linha de comando:</p>
+
+<p>
+<pre><code class="language-sh" style="font-size: medium; line-height: 1.2;">gradle clean test</code></pre>
+</p>
+
+<p>Pronto! Você já pode criar e rodar testes para seu código Spark. Espero que tenha ajudado. Em breve escreverei um post ensinando como testar um código de Spark Streaming.</p>
+
+<p>Post original em <a href="http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/">http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/</a></p>
+
+    </section>
+
+
+  <footer class="post-footer">
+
+
+    
+
+    
+
+
+
+
+
+<section class="author">
+  <h4><a href="http://grandesdados.com/">Ricardo Paiva</a></h4>
+  
+  <p>Engenheiro de sistemas, nerd, entusiasta de fotografia e ciclista randonneur</p>
+  
+  <div class="author-meta">
+    <span class="author-location icon-location">Rio de Janeiro - Brazil</span>
+    <span class="author-link icon-link"><a href="http://blog.werneckpaiva.com">http://blog.werneckpaiva.com</a></span>
+  </div>
+</section>
+
+
+
+    
+    <section class="share">
+      <h4>Share this post</h4>
+      <a class="icon-twitter" style="font-size: 1.4em" href="https://twitter.com/share?text=Testes%20de%20jobs%20Spark%20com%20JUnit&amp;url=http%3a%2f%2fgrandesdados.com%2fpost%2ftestes-spark-junit%2f"
+          onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+          <span class="hidden">Twitter</span>
+      </a>
+      <a class="icon-facebook" style="font-size: 1.4em" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fgrandesdados.com%2fpost%2ftestes-spark-junit%2f"
+          onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+          <span class="hidden">Facebook</span>
+      </a>
+      <a class="icon-google-plus" style="font-size: 1.4em" href="https://plus.google.com/share?url=http%3a%2f%2fgrandesdados.com%2fpost%2ftestes-spark-junit%2f"
+         onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+          <span class="hidden">Google+</span>
+      </a>
+    </section>
+    
+
+    
+    
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname = 'grandesdados';
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    
+    
+
+  </footer>
+</article>
+
+</main>
+    <footer class="site-footer clearfix">
+        <section class="copyright"><a href="">Grandes Dados</a> Todos os direitos reservados - 2015</section>
+        
+        <section class="poweredby">Proudly generated by <a class="icon-hugo" href="http://gohugo.io">HUGO</a>, with <a class="icon-theme" href="https://github.com/vjeantet/hugo-theme-casper">Casper</a> theme</section>
+        
+    </footer>
+    </div>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="http://grandesdados.com/js/index.js"></script>
+
+</body>
+</html>
+

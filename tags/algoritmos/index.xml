@@ -39,7 +39,7 @@
 
 &lt;p&gt;&lt;a href=&#34;http://yelp.github.io/MOE/install.html#install-from-source&#34;&gt;http://yelp.github.io/MOE/install.html#install-from-source&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;mkdir grandesdados-opt
 cd grandesdados-opt
 
@@ -71,7 +71,7 @@ pserve --reload development.ini
 &amp;gt; serving on 0.0.0.0:6543 view at http://127.0.0.1:6543
 
 # (nesse momento, esse terminal fica &amp;#39;preso&amp;#39; mostrando o log do servidor do MOE)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;O próximo passo é instalar o algoritmo que tem parâmetros que precisam ser otimizados.&lt;/p&gt;
 
@@ -85,7 +85,7 @@ pserve --reload development.ini
 
 &lt;p&gt;(procedimento na mesma pasta anterior &lt;code&gt;grandesdados-opt&lt;/code&gt;)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -L -O http://ftp.unicamp.br/pub/apache/spark/spark-1.5.0/spark-1.5.0-bin-hadoop2.6.tgz
 tar zxf spark-1.5.0-bin-hadoop2.6.tgz
 cd spark-1.5.0-bin-hadoop2.6/
@@ -94,11 +94,11 @@ cp conf/log4j.properties{.template,}
 sed -i s/log4j\.rootCategory\=INFO/log4j\.rootCategory\=ERROR/1 conf/log4j.properties
 
 echo &amp;#34;spark.ui.showConsoleProgress=false&amp;#34; &amp;gt; conf/spark-defaults.conf&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Executando o exemplo do MovieLens (a saída são os parâmetros):&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;./bin/run-example ml.MovieLensALS
 
 &amp;gt; Error: Missing option --ratings
@@ -126,7 +126,7 @@ echo &amp;#34;spark.ui.showConsoleProgress=false&amp;#34; &amp;gt; conf/spark-de
 &amp;gt;   --rank 10 --maxIter 15 --regParam 0.1 \
 &amp;gt;   --movies data/mllib/als/sample_movielens_movies.txt \
 &amp;gt;   --ratings data/mllib/als/sample_movielens_ratings.txt&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Fazendo uma execução:&lt;/p&gt;
 

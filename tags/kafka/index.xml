@@ -28,7 +28,7 @@
 
 &lt;p&gt;&lt;a href=&#34;https://wiki.archlinux.org/index.php/Docker&#34;&gt;https://wiki.archlinux.org/index.php/Docker&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker version
 
 &amp;gt; Client:
@@ -46,7 +46,7 @@
 &amp;gt;  Git commit:   d12ea79
 &amp;gt;  Built:        Sat Aug 15 17:29:10 UTC 2015
 &amp;gt;  OS/Arch:      linux/amd64&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h2 id=&#34;configuração:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Configuração&lt;/h2&gt;
 
@@ -62,7 +62,7 @@
 
 &lt;p&gt;Ao executar o comando &lt;code&gt;run&lt;/code&gt;, o Docker automaticamente fará o download da imagem e a shell será inicializada dentro de um novo container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;sudo docker run -i -t --name=grandesdados-hadoop --hostname=grandesdados-hadoop centos:6 /bin/bash
 
 &amp;gt; Unable to find image &amp;#39;centos:6&amp;#39; locally
@@ -76,18 +76,18 @@
 &amp;gt; Digest: sha256:25d94c55b37cb7a33ad706d5f440e36376fec20f59e57d16fe02c64698b531c1
 &amp;gt; Status: Downloaded newer image for centos:6
 &amp;gt; [root@grandesdados-hadoop /]#&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Já dentro do container criamos um usuário e local que serão usados para a instalação e execução dos processos.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;adduser -m -d /hadoop hadoop
 cd hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;A versão usada nesse procedimento é o Java 8, atual versão estável da Oracle.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;curl -k -L -H &amp;#34;Cookie: oraclelicense=accept-securebackup-cookie&amp;#34; -O http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm
 rpm -i jdk-8u60-linux-x64.rpm
 
@@ -103,19 +103,19 @@ java -version
 &amp;gt; java version &amp;#34;1.8.0_60&amp;#34;
 &amp;gt; Java(TM) SE Runtime Environment (build 1.8.0_60-b27)
 &amp;gt; Java HotSpot(TM) 64-Bit Server VM (build 25.60-b23, mixed mode)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Para completar o ambiente de execução, instalamos os serviços e bibliotecas necessárias.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;yum install -y tar openssh-clients openssh-server rsync gzip zlib openssl fuse bzip2 snappy
 
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;(configuração do SSH para acesso sem senha)&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;service sshd start
 chkconfig sshd on
 
@@ -142,7 +142,7 @@ exit
 whoami
 
 &amp;gt; root&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;h3 id=&#34;hadoop:7662b18c2fa1b345b82a7d885cf16b10&#34;&gt;Hadoop&lt;/h3&gt;
 
@@ -162,18 +162,18 @@ whoami
 
 &lt;p&gt;&lt;strong&gt;Instalação&lt;/strong&gt;&lt;/p&gt;
 
-&lt;p&gt;O pacote usado nesse procedimento é o Hadoop 2.7.1 para CentOS6 descrito outro &lt;a href=&#34;http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker&#34;&gt;artigo&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;O pacote usado nesse procedimento é o Hadoop 2.7.1 para CentOS6 descrito outro &lt;a href=&#34;http://grandesdados.com/post/compilacao-do-hadoop-para-centos6-rhel6-usando-docker/&#34;&gt;artigo&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Primeiramente, colocamos o pacote dentro do container.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;# (shell fora do container)
 sudo docker cp hadoop-2.7.1.tar.gz grandesdados-hadoop:/hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;De volta ao container como usuário root.&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;tar zxf hadoop-2.7.1.tar.gz -C /opt
 chown hadoop:hadoop -R /opt/hadoop-2.7.1
 
@@ -191,7 +191,7 @@ hadoop version
 
 mkdir -p /data/hadoop
 chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;&lt;strong&gt;Configuração&lt;/strong&gt;&lt;/p&gt;
 
@@ -199,7 +199,7 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/core-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;hadoop.tmp.dir&amp;lt;/name&amp;gt;
@@ -210,11 +210,11 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;hdfs://grandesdados-hadoop&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/hdfs-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;dfs.replication&amp;lt;/name&amp;gt;
@@ -225,22 +225,22 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;8M&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/yarn-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;yarn.nodemanager.aux-services&amp;lt;/name&amp;gt;
         &amp;lt;value&amp;gt;mapreduce_shuffle&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Editar &lt;code&gt;/opt/hadoop-2.7.1/etc/hadoop/mapred-site.xml&lt;/code&gt;:&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-xml&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;&amp;lt;configuration&amp;gt;
     &amp;lt;property&amp;gt;
         &amp;lt;name&amp;gt;mapreduce.framework.name&amp;lt;/name&amp;gt;
@@ -251,11 +251,11 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
         &amp;lt;value&amp;gt;/user&amp;lt;/value&amp;gt;
     &amp;lt;/property&amp;gt;
 &amp;lt;/configuration&amp;gt;&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;Setup Inicial (antes da primeira inicialização).&lt;/p&gt;
 
-&lt;p&gt;
+
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;hdfs namenode -format
 
 &amp;gt; 15/09/16 02:12:03 INFO namenode.NameNode: STARTUP_MSG: 
@@ -270,7 +270,7 @@ chown hadoop:hadoop /data/hadoop&lt;/code&gt;&lt;/pre&gt;
 &amp;gt; (...)
 &amp;gt; INFO common.Storage: Storage directory /data/hadoop/dfs/name has been successfully formatted.
 &amp;gt; (...)&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
+
 
 &lt;p&gt;&lt;strong&gt;HDFS&lt;/strong&gt;&lt;/p&gt;
 
