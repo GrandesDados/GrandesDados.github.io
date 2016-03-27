@@ -3,8 +3,13 @@
   
   <url>
     <loc>http://grandesdados.com/</loc>
-    <lastmod>2016-03-12T01:30:34-03:00</lastmod>
+    <lastmod>2016-03-26T22:33:20-03:00</lastmod>
     <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://grandesdados.com/post/testes-spark-streaming-junit/</loc>
+    <lastmod>2016-03-26T22:33:20-03:00</lastmod>
   </url>
   
   <url>

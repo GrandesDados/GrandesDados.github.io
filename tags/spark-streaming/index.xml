@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Test on Grandes Dados</title>
-    <link>http://grandesdados.com/tags/test/</link>
-    <description>Recent content in Test on Grandes Dados</description>
+    <title>Spark Streaming on Grandes Dados</title>
+    <link>http://grandesdados.com/tags/spark-streaming/</link>
+    <description>Recent content in Spark Streaming on Grandes Dados</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
     <lastBuildDate>Sat, 26 Mar 2016 22:33:20 -0300</lastBuildDate>
-    <atom:link href="http://grandesdados.com/tags/test/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://grandesdados.com/tags/spark-streaming/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Testes de Spark Streaming com JUnit</title>
@@ -203,122 +203,6 @@ class BaseTestSparkStreaming {
 &lt;p&gt;Espero ter ajudado.&lt;/p&gt;
 
 &lt;p&gt;Post original em &lt;a href=&#34;http://blog.werneckpaiva.com.br/2016/03/testes-de-spark-streaming-com-junit/&#34;&gt;http://blog.werneckpaiva.com.br/2016/03/testes-de-spark-streaming-com-junit/&lt;/a&gt;&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Testes de jobs Spark com JUnit</title>
-      <link>http://grandesdados.com/post/testes-spark-junit/</link>
-      <pubDate>Sat, 12 Mar 2016 01:30:34 -0300</pubDate>
-      
-      <guid>http://grandesdados.com/post/testes-spark-junit/</guid>
-      <description>
-
-&lt;p&gt;A boa prática de desenvolvimento de software diz que devemos criar sempre testes para nossos códigos, e no universo de Big Data não deveria ser diferente. Neste artigo apresento como testar um código Spark com JUnit para jobs que rodam em batch (não-streaming).&lt;/p&gt;
-
-&lt;p&gt;Os códigos deste artigo estão disponíveis em &lt;a href=&#34;https://github.com/werneckpaiva/spark-junit&#34;&gt;https://github.com/werneckpaiva/spark-junit&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;build-e-gerenciamento-de-dependências:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Build e gerenciamento de dependências&lt;/h2&gt;
-
-&lt;p&gt;O script abaixo define a configuração do build usando a ferramenta Gradle. Com ele baixamos as dependências do Spark para a nossa máquina e configuramos os testes&lt;/p&gt;
-
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;apply plugin: &amp;#39;scala&amp;#39;
-sourceCompatibility = 1.7
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compile &amp;#39;org.slf4j:slf4j-api:1.7.12&amp;#39;
-    compile &amp;#39;org.slf4j:slf4j-log4j12:1.7.12&amp;#39;
-    compile &amp;#39;org.scala-lang:scala-library:2.10.6&amp;#39;
-    compile(&amp;#39;org.apache.hadoop:hadoop-client:2.7.1&amp;#39;) {
-        exclude group: &amp;#39;javax.servlet&amp;#39;
-        exclude group: &amp;#39;javax.servlet.jsp&amp;#39;
-        exclude group: &amp;#39;org.mortbay.jetty&amp;#39;
-    }
-    compile(&amp;#39;org.apache.spark:spark-core_2.10:1.6.1&amp;#39;) {
-        exclude group: &amp;#39;org.apache.hadoop&amp;#39;
-    }
-    compile &amp;#39;org.apache.spark:spark-sql_2.10:1.6.1&amp;#39;
-    compile &amp;#39;org.apache.spark:spark-streaming_2.10:1.6.1&amp;#39;
-    testCompile &amp;#39;junit:junit:4.11&amp;#39;
-}
-
-test {
-    testLogging {
-        events &amp;#34;passed&amp;#34;, &amp;#34;skipped&amp;#34;, &amp;#34;failed&amp;#34;
-        exceptionFormat &amp;#34;full&amp;#34;
-    }
-}&lt;/code&gt;&lt;/pre&gt;
-
-
-&lt;h2 id=&#34;criando-a-classe-de-testes:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Criando a classe de testes&lt;/h2&gt;
-
-&lt;p&gt;Ao criar um teste de um job Spark você precisa iniciar o SparkContext local antes de todos os testes e encerrá-lo no final. O ponto chave desta configuração é definir o master do Spark para &lt;code&gt;local&lt;/code&gt;, desta forma o Spark irá rodar localmente, sem depender de nenhum gerenciador de recursos (como o Yarn).&lt;/p&gt;
-
-&lt;p&gt;Primeiro crie um object que inicia e termina o SparkContext no início dos testes:&lt;/p&gt;
-
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;object TestMyCode {
-  var sc: SparkContext = _
-
-  @BeforeClass
-  def before(): Unit = {
-    val sparkConf = new SparkConf()
-      .setAppName(&amp;#34;Test Spark Batch&amp;#34;)
-      .setMaster(&amp;#34;local&amp;#34;)
-    sc = new SparkContext(sparkConf)
-  }
-
-  @AfterClass
-  def after(): Unit = {
-    sc.stop()
-  }
-
-}&lt;/code&gt;&lt;/pre&gt;
-
-
-&lt;p&gt;Crie a classe com os seus testes. Inicie a classe permitindo que o SparkContext esteja disponível, e crie um contexto SQLContext baseado no SparkContext para poder fazer uso de recursos de DataFrame:&lt;/p&gt;
-
-&lt;p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;class TestMyCode {
-  import TestMyCode._
-  val sql = new SQLContext(sc)
-  import sql.implicits._
-
-  // ...
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
-
-&lt;p&gt;O código de seus testes devem começar criando um RDD utilizando o método &lt;code&gt;parallellize()&lt;/code&gt; do SparkContext. Se o seu código é baseado em DataFrames, você pode usar o método &lt;code&gt;toDF&lt;/code&gt;, disponível quando você importa o implict do SqlContext.&lt;/p&gt;
-
-&lt;p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;@Test
-def testCountPairNumbers(): Unit = {
-  val data = List(1, 2, 3, 4, 5, 6)
-  val df =  sc.parallelize(data).toDF
-
-  # Código que está querendo testar
-  val count = MyOperations.countPairs(df)
-
-  assertEquals(3, count)
-}&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
-
-&lt;h2 id=&#34;rodando-os-testes:b5aa752cc1d5b8aaa758c40936f63c66&#34;&gt;Rodando os testes&lt;/h2&gt;
-
-&lt;p&gt;Para rodar os teste, você pode usar seu IDE (no Eclipse, clique com botão direito no arquivo do teste, selecione Run as &amp;gt; Scala JUnit Test). Podemos usar o Gradle para rodar todos os testes pela linha de comando:&lt;/p&gt;
-
-&lt;p&gt;
-&lt;pre&gt;&lt;code class=&#34;language-sh&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;gradle clean test&lt;/code&gt;&lt;/pre&gt;
-&lt;/p&gt;
-
-&lt;p&gt;Pronto! Você já pode criar e rodar testes para seu código Spark. Espero que tenha ajudado. Em breve escreverei um post ensinando como testar um código de Spark Streaming.&lt;/p&gt;
-
-&lt;p&gt;Post original em &lt;a href=&#34;http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/&#34;&gt;http://blog.werneckpaiva.com.br/2016/03/testes-de-jobs-spark-com-junit/&lt;/a&gt;&lt;/p&gt;
 </description>
     </item>
     

@@ -7,8 +7,204 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>pt-br</language>
     <copyright>Todos os direitos reservados - 2015</copyright>
-    <lastBuildDate>Sat, 12 Mar 2016 01:30:34 -0300</lastBuildDate>
+    <lastBuildDate>Sat, 26 Mar 2016 22:33:20 -0300</lastBuildDate>
     <atom:link href="http://grandesdados.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Testes de Spark Streaming com JUnit</title>
+      <link>http://grandesdados.com/post/testes-spark-streaming-junit/</link>
+      <pubDate>Sat, 26 Mar 2016 22:33:20 -0300</pubDate>
+      
+      <guid>http://grandesdados.com/post/testes-spark-streaming-junit/</guid>
+      <description>
+
+&lt;p&gt;Dando continuidade ao artigo sobre &lt;a href=&#34;http://grandesdados.com/post/testes-spark-junit/&#34;&gt;testes no Spark&lt;/a&gt;, apresento agora como fazer testes em jobs streaming. O maior desafio ao criar estes testes é fazer com que eles não dependam do tempo real para executar, pois alguns jobs podem aguardar muitos minutos para gerar um processamento.&lt;/p&gt;
+
+&lt;p&gt;Os jobs Spark do tipo streaming obtém dados de alguma fonte com fluxo contínuo de dados, como um barramento mensagens como o Kafka, logs etc. Os jobs são configurados com um intervalo de tempo e processam todas as mensagens que chegaram dentro deste período.&lt;/p&gt;
+
+&lt;p&gt;A estratégia que adotaremos será criar um relógio virtual, onde poderemos avançar mais rapidamente e simular o relógio real. Desta forma, nossos testes não precisarão esperar o tempo total do streaming para terminarem. Também criaremos uma fila para simular a sequência dos dados. Veja as classes que precisam ser criadas para que tudo isso funcione.&lt;/p&gt;
+
+&lt;h3 id=&#34;relógio-virtual:616fff47681e64d3e324d29372e66883&#34;&gt;Relógio virtual&lt;/h3&gt;
+
+&lt;p&gt;A primeira classe a ser criada define um relógio virtual e sobrescreve a classe original do Spark:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;org.apache.spark.ClockWrapper&lt;/strong&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;package org.apache.spark
+
+import org.apache.spark.streaming.{StreamingContext, StreamingContextWrapper}
+
+class ClockWrapper(ssc: StreamingContext) {
+
+  private val manualClock = new StreamingContextWrapper(ssc).manualClock
+  def getTimeMillis: Long = manualClock.getTimeMillis()
+  def setTime(timeToSet: Long) = manualClock.setTime(timeToSet)
+  def advance(timeToAdd: Long) = manualClock.advance(timeToAdd)
+  def waitTillTime(targetTime: Long): Long = manualClock.waitTillTime(targetTime)
+
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;A segunda classe também sobrescreve o comportamento natural do Spark para usar um relógio manual:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;org.apache.spark.streaming.StreamingContextWrapper&lt;/strong&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;package org.apache.spark.streaming
+
+import org.apache.spark.util.ManualClock
+
+class StreamingContextWrapper(ssc: StreamingContext) {
+  val manualClock = ssc.scheduler.clock.asInstanceOf[ManualClock]
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;Não se esqueça de criar os pacotes corretos!&lt;/p&gt;
+
+&lt;h3 id=&#34;test-dstream:616fff47681e64d3e324d29372e66883&#34;&gt;Test DStream&lt;/h3&gt;
+
+&lt;p&gt;A próxima classe cria um DStream para os testes baseado em uma fila em memória. Você pode criar esta classe no pacote que for melhor para você.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;werneckpaiva.spark.test.util.TestInputDStream&lt;/strong&gt;&lt;/p&gt;
+
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;package werneckpaiva.spark.test.util
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Queue
+import scala.reflect.ClassTag
+
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.Time
+import org.apache.spark.streaming.dstream.InputDStream
+
+
+class TestInputDStream[T:ClassTag](
+    ssc: StreamingContext, queue: Queue[RDD[T]], defaultRDD: RDD[T])
+      extends InputDStream[T](ssc) {
+
+  def start() {}
+  def stop() {}
+  def compute(validTime: Time): Option[RDD[T]] = {
+    val buffer = new ArrayBuffer[RDD[T]]()
+    if (!queue.isEmpty) {
+      Some(queue.dequeue())
+    } else {
+      Some(defaultRDD)
+    }
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+
+
+&lt;h3 id=&#34;classe-teste-base:616fff47681e64d3e324d29372e66883&#34;&gt;Classe Teste Base&lt;/h3&gt;
+
+&lt;p&gt;A última classe a ser criada é uma classe utilitária para simplificar o código de nossos testes. Ela inicia o contexto Spark Streaming e declara um método que sincroniza nosso código até que os dados estejam prontos para que o streaming seja processado. Neste caso estamos sempre iniciando o streaming de teste com duração de 5 segundos. Você pode definir o período que achar melhor e colocar no pacote que achar apropriado.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;werneckpaiva.spark.test.BaseTestSparkStreaming&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;package werneckpaiva.spark.test
+
+import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.junit.After
+import org.junit.Before
+import org.apache.spark.ClockWrapper
+import org.apache.spark.streaming.Seconds
+import java.nio.file.Files
+import scala.reflect.ClassTag
+import werneckpaiva.spark.test.util.TestInputDStream
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Queue
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.Duration
+
+class BaseTestSparkStreaming {
+  var ssc:StreamingContext = _
+  var sc:SparkContext = _
+  var clock:ClockWrapper = _
+
+  @Before
+  def before():Unit = {
+    val sparkConf = new SparkConf()
+      .setAppName(&amp;#34;Test Spark Streaming&amp;#34;)
+      .setMaster(&amp;#34;local[*]&amp;#34;)
+      .set(&amp;#34;spark.streaming.clock&amp;#34;, &amp;#34;org.apache.spark.streaming.util.ManualClock&amp;#34;)
+
+    val checkpointDir = Files.createTempDirectory(&amp;#34;test&amp;#34;).toString
+    ssc = new StreamingContext(sparkConf, Seconds(5))
+    ssc.checkpoint(checkpointDir)
+    sc = ssc.sparkContext
+    clock = new ClockWrapper(ssc)
+  }
+
+  @After
+  def after():Unit = {
+    ssc.stop()
+    sc.stop()
+  }
+
+  def makeStream[T:ClassTag]():(Queue[RDD[T]], TestInputDStream[T]) = {
+    val lines = new Queue[RDD[T]]()
+    val stream = new TestInputDStream[T](ssc, lines, sc.makeRDD(Seq[T](), 1))
+    (lines, stream)
+  }
+
+  def waitForResultReady[T](stream:DStream[T], time:Duration):ListBuffer[Array[T]] = {
+    val results = ListBuffer.empty[Array[T]]
+    stream.foreachRDD((rdd, time) =&amp;gt; {
+      results.append(rdd.collect())
+    })
+    ssc.start()
+    clock.advance(time.milliseconds)
+    for(i &amp;lt;- 1 to 100){
+      if(results.length &amp;gt;= 1) return results
+      Thread.sleep(100)
+    }
+    throw new Exception(&amp;#34;Can&amp;#39;t load stream&amp;#34;)
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;h2 id=&#34;criando-seus-testes:616fff47681e64d3e324d29372e66883&#34;&gt;Criando seus testes&lt;/h2&gt;
+
+&lt;p&gt;Depois de criar essas classes, já temos todas as ferramentas para construir nossos testes. Cada teste inicializa o DStream de teste e uma fila em memória. Executa o código a ser testado, e popula a fila com os dados de teste. Para podermos executar os asserts, precisamos antes executar o método que avança o relógio virtual.&lt;/p&gt;
+
+&lt;p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-python&#34; style=&#34;font-size: medium; line-height: 1.2;&#34;&gt;class TestSparkStreaming extends BaseTestSparkStreaming{
+
+  @Test
+  def testSimpleSum():Unit = {
+    val (lines, stream) = makeStream[(String, Long)]()
+
+    // Código que você quer testar
+    val reducedStream = StreamOperations.streamSum(stream)
+
+    lines &amp;#43;= sc.makeRDD(Seq((&amp;#34;a&amp;#34;, 1L), (&amp;#34;a&amp;#34;, 1L), (&amp;#34;b&amp;#34;, 1L)))
+    lines &amp;#43;= sc.makeRDD(Seq((&amp;#34;a&amp;#34;, 1L), (&amp;#34;a&amp;#34;, 1L)))
+    lines &amp;#43;= sc.makeRDD(Seq((&amp;#34;a&amp;#34;, 1L), (&amp;#34;a&amp;#34;, 2L), (&amp;#34;b&amp;#34;, 3L), (&amp;#34;b&amp;#34;, 2L)))
+
+    val results = waitForResultReady(reducedStream, Seconds(20))
+
+    assertEquals((&amp;#34;a&amp;#34;, 2), results(0)(0))
+    assertEquals((&amp;#34;b&amp;#34;, 1), results(0)(1))
+  }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/p&gt;
+
+&lt;p&gt;No exemplo acima criamos um stream com 3 períodos representados por 3 sequência de dados. Nosso assert só está testando o primeiro período. O código testado não faz nada mais do que agrupar os valores por chave e somar os valores.&lt;/p&gt;
+
+&lt;p&gt;Eu penei um pouco para chegar até essas classes e iniciar meus testes, mas agora é bem simples criá-los e isso aumentou bem a qualidade do código que produzo.&lt;/p&gt;
+
+&lt;p&gt;O código desses exemplo está neste projeto do Github &lt;a href=&#34;https://github.com/werneckpaiva/spark-junit&#34;&gt;https://github.com/werneckpaiva/spark-junit&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Espero ter ajudado.&lt;/p&gt;
+
+&lt;p&gt;Post original em &lt;a href=&#34;http://blog.werneckpaiva.com.br/2016/03/testes-de-spark-streaming-com-junit/&#34;&gt;http://blog.werneckpaiva.com.br/2016/03/testes-de-spark-streaming-com-junit/&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Testes de jobs Spark com JUnit</title>
